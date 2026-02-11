@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Action_Send_Completed_Email</name>
+        <label>Registration Completed Email</label>
+        <locationX>50</locationX>
+        <locationY>914</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Registration Details for your Event</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Hi {!$Record.Signer_Contact__r.FirstName},
+
+Thank you! All appointment taker registrations for your opportunity have been completed.
+
+— Connect Meetings Team</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <actionCalls>
+        <name>Action_Send_Follow_Up_Email</name>
+        <label>Send Follow Up Email</label>
+        <locationX>314</locationX>
+        <locationY>914</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Action Required: Attendee Details for your Event Registrations</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Hi {!$Record.Signer_Contact__r.FirstName},
+
+Thank you for your purchase! We need the following details to complete the registration for your {!varMissingCount} appointment taker pass(es).
+
+Please reply to this email with the full name and email address for each attendee.
+
+For example:
+- Jane Doe (jane.doe@company.com)
+- John Smith (john.smith@company.com)
+
+— Connect Meetings Team</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <apiVersion>62.0</apiVersion>
+    <assignments>
+        <name>Assign_Increment_Missing</name>
+        <label>Increment Missing</label>
+        <locationX>314</locationX>
+        <locationY>590</locationY>
+        <assignmentItems>
+            <assignToReference>varMissingCount</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_OLIs</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_Increment_Total</name>
+        <label>Increment Total</label>
+        <locationX>176</locationX>
+        <locationY>482</locationY>
+        <assignmentItems>
+            <assignToReference>varTotalCount</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Decision_Is_Missing</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>Decision_All_Registered</name>
+        <label>Are all attendees registered?</label>
+        <locationX>176</locationX>
+        <locationY>806</locationY>
+        <defaultConnectorLabel>No AT Products</defaultConnectorLabel>
+        <rules>
+            <name>Outcome_All_Registered</name>
+            <label>All Registered</label>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>varMissingCount</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <numberValue>0.0</numberValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>varTotalCount</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <numberValue>0.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Action_Send_Completed_Email</targetReference>
+            </connector>
+        </rules>
+        <rules>
+            <name>Outcome_Missing_Attendees</name>
+            <label>Missing Attendees</label>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>varMissingCount</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <numberValue>0.0</numberValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>varTotalCount</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <numberValue>0.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Action_Send_Follow_Up_Email</targetReference>
+            </connector>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Decision_Is_Missing</name>
+        <label>Is Attendee Info Missing?</label>
+        <locationX>176</locationX>
+        <locationY>590</locationY>
+        <defaultConnector>
+            <targetReference>Loop_OLIs</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not Missing</defaultConnectorLabel>
+        <rules>
+            <name>Outcome_Yes_Missing</name>
+            <label>Yes</label>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>Loop_OLIs.Attendee_Name__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Loop_OLIs.Attendee_Email__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Increment_Missing</targetReference>
+            </connector>
+        </rules>
+    </decisions>
+    <description>Sends registration emails when Opportunity moves to Closed Won with Appointment Taker products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
+    <interviewLabel>Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Appointment Taker - Send Registration Emails</label>
+    <loops>
+        <name>Loop_OLIs</name>
+        <label>Loop OLIs</label>
+        <locationX>176</locationX>
+        <locationY>374</locationY>
+        <collectionReference>Get_Appointment_Taker_OLIs</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Assign_Increment_Total</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Decision_All_Registered</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Appointment_Taker_OLIs</name>
+        <label>Get Appointment Taker OLIs</label>
+        <locationX>176</locationX>
+        <locationY>266</locationY>
+        <connector>
+            <targetReference>Loop_OLIs</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>OpportunityId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Product2Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>01t4X000004U13iQAC</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>OpportunityLineItem</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Appointment_Taker_OLIs</targetReference>
+        </connector>
+        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>StageName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Closed Won</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Signer_Contact__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>Opportunity</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Draft</status>
+    <variables>
+        <name>varMissingCount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+    <variables>
+        <name>varTotalCount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+</Flow>
