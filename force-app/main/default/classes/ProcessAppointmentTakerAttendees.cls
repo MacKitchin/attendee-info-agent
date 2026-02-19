@@ -1,8 +1,11 @@
 /**
  * @description Invocable Apex to process Appointment Taker attendees from JSON and assign to available OpportunityLineItems.
+ * Attendees are matched to OLIs by event_name + product_type (group-fill). If no match, falls back to
+ * the next available open slot in creation order.
  * @author Agentforce
  * @group Attendee Processing
  * @date 2026-02-10
+ * @modified 2026-02-19 — Added group-fill assignment by Event Name + Product Type
  */
 public with sharing class ProcessAppointmentTakerAttendees {
     /**
@@ -94,6 +97,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
         // Load available OLIs (WITH USER_MODE to enforce user security)
         List<OpportunityLineItem> available = [
             SELECT Id, OpportunityId, Product2.Name, CreatedDate,
+                   Event_Name__c, Product_Type__c,
                    Attendee_First_Name__c, Attendee_Name__c, Attendee_Email__c
             FROM OpportunityLineItem
             WHERE OpportunityId = :req.opportunityId
@@ -107,18 +111,58 @@ public with sharing class ProcessAppointmentTakerAttendees {
             return new Result(true, buildStatus(STATUS_PART.NO_MATCHING_LINE_ITEMS, 'No open Appointment Taker line items found.'));
         }
 
-        // Assign attendees to earliest-created open slots.
-        // Build clean SObject instances with only Id + target fields to avoid
-        // USER_MODE FLS errors on read-only relationship fields from the query.
-        Integer assignable = Math.min(attendees.size(), available.size());
+        // Build group map: "eventName|productType" -> ordered queue of open OLIs
+        // OLIs within each group are served in CreatedDate ASC order (from the query above).
+        Map<String, List<OpportunityLineItem>> groupMap = new Map<String, List<OpportunityLineItem>>();
+        for (OpportunityLineItem oli : available) {
+            String key = buildGroupKey(oli.Event_Name__c, oli.Product_Type__c);
+            if (!groupMap.containsKey(key)) {
+                groupMap.put(key, new List<OpportunityLineItem>());
+            }
+            groupMap.get(key).add(oli);
+        }
+
+        // Track claimed slot IDs to avoid double-assignment
+        Set<Id> claimed = new Set<Id>();
         List<OpportunityLineItem> toUpdate = new List<OpportunityLineItem>();
-        for (Integer i = 0; i < assignable; i++) {
-            Attendee a = attendees[i];
-            OpportunityLineItem upd = new OpportunityLineItem(Id = available[i].Id);
-            upd.Attendee_First_Name__c = a.firstName;
-            upd.Attendee_Name__c = a.firstName + ' ' + a.lastName;
-            upd.Attendee_Email__c = a.email;
-            toUpdate.add(upd);
+
+        for (Attendee a : attendees) {
+            if (toUpdate.size() >= available.size()) break;
+
+            OpportunityLineItem target = null;
+
+            // 1. Try matching group by event_name + product_type
+            if (String.isNotBlank(a.eventName) && String.isNotBlank(a.productType)) {
+                String key = buildGroupKey(a.eventName, a.productType);
+                if (groupMap.containsKey(key)) {
+                    for (OpportunityLineItem oli : groupMap.get(key)) {
+                        if (!claimed.contains(oli.Id)) {
+                            target = oli;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 2. Fallback: next available unclaimed slot (positional)
+            if (target == null) {
+                for (OpportunityLineItem oli : available) {
+                    if (!claimed.contains(oli.Id)) {
+                        target = oli;
+                        break;
+                    }
+                }
+            }
+
+            if (target != null) {
+                claimed.add(target.Id);
+                // Build clean SObject to avoid USER_MODE FLS errors on relationship fields
+                OpportunityLineItem upd = new OpportunityLineItem(Id = target.Id);
+                upd.Attendee_First_Name__c = a.firstName;
+                upd.Attendee_Name__c = a.firstName + (String.isNotBlank(a.lastName) ? ' ' + a.lastName : '');
+                upd.Attendee_Email__c = a.email;
+                toUpdate.add(upd);
+            }
         }
 
         if (toUpdate.isEmpty()) {
@@ -173,17 +217,31 @@ public with sharing class ProcessAppointmentTakerAttendees {
     }
 
     /**
+     * @description Builds a lowercase composite key for group-fill matching.
+     * Normalises nulls to empty string so null|null still forms a valid key.
+     */
+    @TestVisible
+    private static String buildGroupKey(String eventName, String productType) {
+        return (String.isNotBlank(eventName) ? eventName.trim().toLowerCase() : '') + '|' +
+               (String.isNotBlank(productType) ? productType.trim().toLowerCase() : '');
+    }
+
+    /**
      * @description Lightweight attendee DTO
      */
     private class Attendee {
         String firstName;
         String lastName;
         String email;
+        String eventName;    // from event_name JSON key
+        String productType;  // from product_type JSON key
 
-        Attendee(String firstName, String lastName, String email) {
+        Attendee(String firstName, String lastName, String email, String eventName, String productType) {
             this.firstName = firstName;
             this.lastName = lastName;
             this.email = email;
+            this.eventName = eventName;
+            this.productType = productType;
         }
     }
 
@@ -193,7 +251,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
     private class ProcessException extends Exception {}
 
     /**
-     * @description Parse attendees from a JSON array of objects with keys: first_name, last_name, email
+     * @description Parse attendees from a JSON array of objects.
+     * Recognised keys: first_name, last_name, email, event_name, product_type
      * Uses JSON.deserializeUntyped to validate structure explicitly.
      */
     private static List<Attendee> parseAttendees(String jsonString) {
@@ -205,23 +264,21 @@ public with sharing class ProcessAppointmentTakerAttendees {
         List<Attendee> out = new List<Attendee>();
         for (Object row : rawList) {
             if (!(row instanceof Map<String, Object>)) {
-                // Skip non-object entries rather than failing all
                 continue;
             }
             Map<String, Object> m = (Map<String, Object>)row;
             String fn = (m.containsKey('first_name') && m.get('first_name') != null) ? String.valueOf(m.get('first_name')).trim() : null;
             String ln = (m.containsKey('last_name') && m.get('last_name') != null) ? String.valueOf(m.get('last_name')).trim() : null;
             String em = (m.containsKey('email') && m.get('email') != null) ? String.valueOf(m.get('email')).trim() : null;
+            String ev = (m.containsKey('event_name') && m.get('event_name') != null) ? String.valueOf(m.get('event_name')).trim() : null;
+            String pt = (m.containsKey('product_type') && m.get('product_type') != null) ? String.valueOf(m.get('product_type')).trim() : null;
 
             // Require at minimum email and first name; allow empty last name
             if (String.isBlank(fn) || String.isBlank(em)) {
-                // Skip invalid attendee rows
                 continue;
             }
-            if (ln == null) {
-                ln = '';
-            }
-            out.add(new Attendee(fn, ln, em));
+            if (ln == null) ln = '';
+            out.add(new Attendee(fn, ln, em, ev, pt));
         }
         return out;
     }

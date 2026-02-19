@@ -85,12 +85,6 @@
             </value>
         </inputParameters>
         <inputParameters>
-            <name>composeEmailContent</name>
-            <value>
-                <stringValue>True</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
             <name>emailSubject</name>
             <value>
                 <stringValue>Action Required: Attendee Details for your Event Registrations</stringValue>
@@ -99,14 +93,7 @@
         <inputParameters>
             <name>emailBody</name>
             <value>
-                <inputConfiguratorMode>Custom</inputConfiguratorMode>
-                <stringValue>&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you for your purchase! We need the following details to complete the registration for your {!varMissingCount} appointment taker registration(s).&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Please reply to this email with the full name and email address for each attendee.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;For example:&lt;/p&gt;&lt;p&gt;- Jane Doe (jane.doe@company.com)&lt;/p&gt;&lt;p&gt;- John Smith (john.smith@company.com)&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Many thanks,&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(149, 79, 114); font-size: 11px; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;span style=&quot;font-size: 11px; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8px; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 8px; font-family: Calibri, sans-serif;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>sendRichBody</name>
-            <value>
-                <booleanValue>true</booleanValue>
+                <elementReference>varEmailBody</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -134,8 +121,8 @@
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <assignments>
-        <name>Assign_Increment_Missing</name>
-        <label>Increment Missing</label>
+        <name>Assign_Build_Missing_Line</name>
+        <label>Build Missing Attendee Line</label>
         <locationX>402</locationX>
         <locationY>755</locationY>
         <assignmentItems>
@@ -145,8 +132,118 @@
                 <numberValue>1.0</numberValue>
             </value>
         </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varCounter</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>varCounter</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>. Event: </stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Loop_OLIs.Event_Name__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue> | Type: </stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Loop_OLIs.Product_Type__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>
+   Attendee Name: 
+   Attendee Email: 
+
+</stringValue>
+            </value>
+        </assignmentItems>
         <connector>
             <targetReference>Loop_OLIs</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_Init_Email_Body</name>
+        <label>Initialize Email Body</label>
+        <locationX>314</locationX>
+        <locationY>377</locationY>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Hi </stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>$Record.Signer_Contact__r.FirstName</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>,
+
+Thank you for your purchase! Please reply to this email with the attendee name and email address for each registration listed below.
+
+</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_OLIs</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Assign_Append_Footer</name>
+        <label>Append Email Footer</label>
+        <locationX>314</locationX>
+        <locationY>1085</locationY>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>Many thanks,
+
+Connect Meetings Team
+www.informaconnect.com
+
+This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.
+
+Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | London | SW1P 1WG</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Action_Send_Follow_Up_Email</targetReference>
         </connector>
     </assignments>
     <assignments>
@@ -211,7 +308,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Action_Send_Follow_Up_Email</targetReference>
+                <targetReference>Assign_Append_Footer</targetReference>
             </connector>
             <label>Missing Attendees</label>
         </rules>
@@ -243,7 +340,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Assign_Increment_Missing</targetReference>
+                <targetReference>Assign_Build_Missing_Line</targetReference>
             </connector>
             <label>Yes</label>
         </rules>
@@ -286,7 +383,7 @@
         <locationY>323</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Loop_OLIs</targetReference>
+            <targetReference>Assign_Init_Email_Body</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -333,7 +430,25 @@
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Draft</status>
+    <variables>
+        <name>varCounter</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+    <variables>
+        <name>varEmailBody</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
     <variables>
         <name>varMissingCount</name>
         <dataType>Number</dataType>

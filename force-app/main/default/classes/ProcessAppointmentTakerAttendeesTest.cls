@@ -88,18 +88,47 @@ private class ProcessAppointmentTakerAttendeesTest {
     }
 
     /**
-     * @description Generates a JSON string with the given number of test attendees
+     * @description Generates a JSON string with the given number of test attendees (no event context)
      */
     private static String attendeesJson(Integer count) {
         List<Map<String, Object>> items = new List<Map<String, Object>>();
         for (Integer i = 0; i < count; i++) {
             items.add(new Map<String, Object>{
                 'first_name' => 'First' + i,
-                'last_name' => 'Last' + i,
-                'email' => 'first' + i + '.last' + i + '@example.com'
+                'last_name'  => 'Last' + i,
+                'email'      => 'first' + i + '.last' + i + '@example.com'
             });
         }
         return JSON.serialize(items);
+    }
+
+    /**
+     * @description Generates a JSON string for a single attendee with event context
+     */
+    private static String attendeeJson(String firstName, String lastName, String email,
+                                       String eventName, String productType) {
+        return JSON.serialize(new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'first_name'   => firstName,
+                'last_name'    => lastName,
+                'email'        => email,
+                'event_name'   => eventName,
+                'product_type' => productType
+            }
+        });
+    }
+
+    /**
+     * @description Verifies buildGroupKey normalises case and handles nulls
+     */
+    @IsTest
+    static void testBuildGroupKey() {
+        System.assertEquals('mega|corporate',
+            ProcessAppointmentTakerAttendees.buildGroupKey('MEGA', 'Corporate'));
+        System.assertEquals('|',
+            ProcessAppointmentTakerAttendees.buildGroupKey(null, null));
+        System.assertEquals('spring marketplace|association',
+            ProcessAppointmentTakerAttendees.buildGroupKey('Spring Marketplace', 'Association'));
     }
 
     @IsTest
@@ -261,6 +290,106 @@ private class ProcessAppointmentTakerAttendeesTest {
         System.assertEquals(1, res.size());
         System.assertEquals(true, res[0].isSuccess, 'Empty attendees should be no-op success');
         System.assert(res[0].statusMessage.contains('NO_ATTENDEES_PROVIDED'), 'Expected NO_ATTENDEES_PROVIDED marker');
+    }
+
+    @IsTest
+    static void testMultiEventMatching_correctSlotAssigned() {
+        // Set up an Opportunity with two OLIs of DIFFERENT Event Name + Product Type.
+        // Each attendee reply carries event context — verify they land on the right OLI.
+        Opportunity opp = getTestOpportunity();
+        PricebookEntry pbe = getTestPricebookEntry();
+
+        // First OLI: MEGA / Association (the @TestSetup OLIs use BizBash MEGA / Association)
+        // Add a second OLI with a DIFFERENT event so we can distinguish them
+        OpportunityLineItem oli3 = new OpportunityLineItem(
+            OpportunityId = opp.Id,
+            PricebookEntryId = pbe.Id,
+            Quantity = 1,
+            TotalPrice = 10,
+            Organization__c = 'BizBash', Product_Year__c = '2026', Product_Category__c = 'Event',
+            Product_Type__c = 'North', Event_Name__c = 'BizBash North Marketplace'
+        );
+        insert oli3;
+
+        // Attendee 1 targets North Marketplace / North
+        // Attendee 2 targets BizBash MEGA / Association
+        String json = JSON.serialize(new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'first_name' => 'NorthFirst', 'last_name' => 'NorthLast',
+                'email' => 'north@example.com',
+                'event_name' => 'BizBash North Marketplace', 'product_type' => 'North'
+            },
+            new Map<String, Object>{
+                'first_name' => 'MegaFirst', 'last_name' => 'MegaLast',
+                'email' => 'mega@example.com',
+                'event_name' => 'BizBash MEGA', 'product_type' => 'Association'
+            }
+        });
+
+        ProcessAppointmentTakerAttendees.Request r = new ProcessAppointmentTakerAttendees.Request();
+        r.opportunityId = opp.Id;
+        r.jsonString = json;
+
+        Test.startTest();
+        List<ProcessAppointmentTakerAttendees.Result> res = ProcessAppointmentTakerAttendees.process(
+            new List<ProcessAppointmentTakerAttendees.Request>{ r }
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, res[0].isSuccess, res[0].statusMessage);
+
+        // Verify correct OLI got the North attendee
+        OpportunityLineItem northOli = [SELECT Attendee_Email__c FROM OpportunityLineItem WHERE Id = :oli3.Id];
+        System.assertEquals('north@example.com', northOli.Attendee_Email__c,
+            'BizBash North Marketplace OLI should have north@example.com');
+
+        // Verify one of the BizBash MEGA OLIs got the mega attendee
+        List<OpportunityLineItem> megaOlis = [
+            SELECT Attendee_Email__c FROM OpportunityLineItem
+            WHERE OpportunityId = :opp.Id AND Event_Name__c = 'BizBash MEGA' AND Attendee_Email__c != null
+        ];
+        System.assertEquals(1, megaOlis.size(), 'One BizBash MEGA OLI should be assigned');
+        System.assertEquals('mega@example.com', megaOlis[0].Attendee_Email__c);
+    }
+
+    @IsTest
+    static void testSameGroupDuplicates_bothAssigned() {
+        // Two OLIs with the SAME Event Name + Product Type on the same Opp.
+        // Both should get filled, positionally, even though they share a group key.
+        Opportunity opp = getTestOpportunity();
+
+        // @TestSetup already created 2 BizBash MEGA / Association OLIs.
+        String json = JSON.serialize(new List<Map<String, Object>>{
+            new Map<String, Object>{
+                'first_name' => 'Alice', 'last_name' => 'Smith',
+                'email' => 'alice@example.com',
+                'event_name' => 'BizBash MEGA', 'product_type' => 'Association'
+            },
+            new Map<String, Object>{
+                'first_name' => 'Bob', 'last_name' => 'Jones',
+                'email' => 'bob@example.com',
+                'event_name' => 'BizBash MEGA', 'product_type' => 'Association'
+            }
+        });
+
+        ProcessAppointmentTakerAttendees.Request r = new ProcessAppointmentTakerAttendees.Request();
+        r.opportunityId = opp.Id;
+        r.jsonString = json;
+
+        Test.startTest();
+        List<ProcessAppointmentTakerAttendees.Result> res = ProcessAppointmentTakerAttendees.process(
+            new List<ProcessAppointmentTakerAttendees.Request>{ r }
+        );
+        Test.stopTest();
+
+        System.assertEquals(true, res[0].isSuccess, res[0].statusMessage);
+        System.assert(res[0].statusMessage.contains('SUCCESS_ASSIGNED'), res[0].statusMessage);
+
+        List<OpportunityLineItem> filled = [
+            SELECT Attendee_Email__c FROM OpportunityLineItem
+            WHERE OpportunityId = :opp.Id AND Attendee_Email__c != null
+        ];
+        System.assertEquals(2, filled.size(), 'Both slots should be assigned');
     }
 
     @IsTest
