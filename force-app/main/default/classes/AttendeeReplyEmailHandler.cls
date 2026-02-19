@@ -48,6 +48,17 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
                 plainBody = plainBody.substring(0, separatorIdx).trim();
             }
 
+            // Decode HTML entities that Outlook injects into the plain text body.
+            // These cause UndefinedResolutionError in the Einstein prompt template engine.
+            plainBody = plainBody
+                .replace('&amp;',  '&')
+                .replace('&lt;',   '<')
+                .replace('&gt;',   '>')
+                .replace('&quot;', '"')
+                .replace('&#39;',  '\'')
+                .replace('&#124;', '|')
+                .replace('&nbsp;', ' ');
+
             // Find the most recent outgoing registration email sent TO this sender
             // to determine the related Opportunity
             List<EmailMessage> originals = [

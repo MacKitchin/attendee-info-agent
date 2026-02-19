@@ -173,6 +173,40 @@ private class AttendeeReplyEmailHandlerTest {
     }
 
     /**
+     * @description HTML entities from Outlook (e.g. &amp; &lt; &#124;) should be decoded
+     * in the stored TextBody so the Einstein prompt template can process it.
+     */
+    @IsTest
+    static void testHtmlEntityDecoding_entitiesDecodedInTextBody() {
+        Messaging.InboundEmail email = new Messaging.InboundEmail();
+        email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
+        email.fromAddress = 'signer@example.com';
+        email.fromName = 'Test Signer';
+        email.toAddresses = new List<String>{ 'attendeeinfo@informa.com' };
+        email.plainTextBody =
+            'Jane Doe\njane@example.com\n\n' +
+            'AI &amp; Innovation Lead &#124; Connect\n' +
+            'william.kitchin@informa.com&lt;mailto:william.kitchin@informa.com&gt;';
+
+        Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+        envelope.fromAddress = 'signer@example.com';
+
+        AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
+
+        Test.startTest();
+        Messaging.InboundEmailResult result = handler.handleInboundEmail(email, envelope);
+        Test.stopTest();
+
+        System.assertEquals(true, result.success);
+        EmailMessage created = [SELECT TextBody FROM EmailMessage WHERE Incoming = true LIMIT 1];
+        System.assert(!created.TextBody.contains('&amp;'),  'HTML entity &amp; should be decoded');
+        System.assert(!created.TextBody.contains('&#124;'), 'HTML entity &#124; should be decoded');
+        System.assert(!created.TextBody.contains('&lt;'),   'HTML entity &lt; should be decoded');
+        System.assert(created.TextBody.contains('AI & Innovation Lead | Connect'),
+            'Decoded text should be present');
+    }
+
+    /**
      * @description Null subject should be silently accepted (doesn't match pattern).
      */
     @IsTest
