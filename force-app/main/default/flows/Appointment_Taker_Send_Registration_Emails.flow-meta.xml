@@ -4,13 +4,28 @@
         <name>Action_Send_Completed_Email</name>
         <label>Registration Completed Email</label>
         <locationX>50</locationX>
-        <locationY>914</locationY>
+        <locationY>1139</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>emailAddresses</name>
             <value>
                 <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>attendeeinfo@informa.com</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -22,11 +37,14 @@
         <inputParameters>
             <name>emailBody</name>
             <value>
-                <stringValue>Hi {!$Record.Signer_Contact__r.FirstName},
-
-Thank you! All appointment taker registrations for your opportunity have been completed.
-
-— Connect Meetings Team</stringValue>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you! All appointment taker registrations have been assigned to your attendees.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Best,&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;img src=&quot;//:0&quot;&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(0, 34, 68); font-size: 10.5pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(94, 83, 215); font-size: 12px;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+            <value>
+                <booleanValue>true</booleanValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -35,18 +53,41 @@ Thank you! All appointment taker registrations for your opportunity have been co
                 <elementReference>$Record.Id</elementReference>
             </value>
         </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
     </actionCalls>
     <actionCalls>
         <name>Action_Send_Follow_Up_Email</name>
         <label>Send Follow Up Email</label>
         <locationX>314</locationX>
-        <locationY>914</locationY>
+        <locationY>1139</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>emailAddresses</name>
             <value>
                 <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>attendeeinfo@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -58,17 +99,20 @@ Thank you! All appointment taker registrations for your opportunity have been co
         <inputParameters>
             <name>emailBody</name>
             <value>
-                <stringValue>Hi {!$Record.Signer_Contact__r.FirstName},
-
-Thank you for your purchase! We need the following details to complete the registration for your {!varMissingCount} appointment taker pass(es).
-
-Please reply to this email with the full name and email address for each attendee.
-
-For example:
-- Jane Doe (jane.doe@company.com)
-- John Smith (john.smith@company.com)
-
-— Connect Meetings Team</stringValue>
+                <inputConfiguratorMode>Custom</inputConfiguratorMode>
+                <stringValue>&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you for your purchase! We need the following details to complete the registration for your {!varMissingCount} appointment taker registration(s).&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Please reply to this email with the full name and email address for each attendee.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;For example:&lt;/p&gt;&lt;p&gt;- Jane Doe (jane.doe@company.com)&lt;/p&gt;&lt;p&gt;- John Smith (john.smith@company.com)&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Many thanks,&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(149, 79, 114); font-size: 11px; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;span style=&quot;font-size: 11px; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8px; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 8px; font-family: Calibri, sans-serif;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sendRichBody</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientId</name>
+            <value>
+                <elementReference>$Record.Signer_Contact__c</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -77,13 +121,23 @@ For example:
                 <elementReference>$Record.Id</elementReference>
             </value>
         </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionString>1.0.1</versionString>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <assignments>
         <name>Assign_Increment_Missing</name>
         <label>Increment Missing</label>
-        <locationX>314</locationX>
-        <locationY>590</locationY>
+        <locationX>402</locationX>
+        <locationY>755</locationY>
         <assignmentItems>
             <assignToReference>varMissingCount</assignToReference>
             <operator>Add</operator>
@@ -98,8 +152,8 @@ For example:
     <assignments>
         <name>Assign_Increment_Total</name>
         <label>Increment Total</label>
-        <locationX>176</locationX>
-        <locationY>482</locationY>
+        <locationX>534</locationX>
+        <locationY>539</locationY>
         <assignmentItems>
             <assignToReference>varTotalCount</assignToReference>
             <operator>Add</operator>
@@ -114,12 +168,11 @@ For example:
     <decisions>
         <name>Decision_All_Registered</name>
         <label>Are all attendees registered?</label>
-        <locationX>176</locationX>
-        <locationY>806</locationY>
+        <locationX>314</locationX>
+        <locationY>1031</locationY>
         <defaultConnectorLabel>No AT Products</defaultConnectorLabel>
         <rules>
             <name>Outcome_All_Registered</name>
-            <label>All Registered</label>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>varMissingCount</leftValueReference>
@@ -138,10 +191,10 @@ For example:
             <connector>
                 <targetReference>Action_Send_Completed_Email</targetReference>
             </connector>
+            <label>All Registered</label>
         </rules>
         <rules>
             <name>Outcome_Missing_Attendees</name>
-            <label>Missing Attendees</label>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>varMissingCount</leftValueReference>
@@ -160,20 +213,20 @@ For example:
             <connector>
                 <targetReference>Action_Send_Follow_Up_Email</targetReference>
             </connector>
+            <label>Missing Attendees</label>
         </rules>
     </decisions>
     <decisions>
         <name>Decision_Is_Missing</name>
         <label>Is Attendee Info Missing?</label>
-        <locationX>176</locationX>
-        <locationY>590</locationY>
+        <locationX>534</locationX>
+        <locationY>647</locationY>
         <defaultConnector>
             <targetReference>Loop_OLIs</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Not Missing</defaultConnectorLabel>
         <rules>
             <name>Outcome_Yes_Missing</name>
-            <label>Yes</label>
             <conditionLogic>or</conditionLogic>
             <conditions>
                 <leftValueReference>Loop_OLIs.Attendee_Name__c</leftValueReference>
@@ -192,16 +245,18 @@ For example:
             <connector>
                 <targetReference>Assign_Increment_Missing</targetReference>
             </connector>
+            <label>Yes</label>
         </rules>
     </decisions>
     <description>Sends registration emails when Opportunity moves to Closed Won with Appointment Taker products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
+    <environments>Default</environments>
     <interviewLabel>Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Appointment Taker - Send Registration Emails</label>
     <loops>
         <name>Loop_OLIs</name>
         <label>Loop OLIs</label>
-        <locationX>176</locationX>
-        <locationY>374</locationY>
+        <locationX>314</locationX>
+        <locationY>431</locationY>
         <collectionReference>Get_Appointment_Taker_OLIs</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -227,8 +282,9 @@ For example:
     <recordLookups>
         <name>Get_Appointment_Taker_OLIs</name>
         <label>Get Appointment Taker OLIs</label>
-        <locationX>176</locationX>
-        <locationY>266</locationY>
+        <locationX>314</locationX>
+        <locationY>323</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Loop_OLIs</targetReference>
         </connector>
@@ -252,7 +308,7 @@ For example:
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <start>
-        <locationX>50</locationX>
+        <locationX>188</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Get_Appointment_Taker_OLIs</targetReference>
@@ -277,7 +333,7 @@ For example:
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Obsolete</status>
     <variables>
         <name>varMissingCount</name>
         <dataType>Number</dataType>

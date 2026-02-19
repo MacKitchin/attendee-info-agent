@@ -1,33 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
+        <description>Calls your Flex Prompt Template to parse the email body into attendee JSON</description>
         <name>Extract_Attendee_Information</name>
         <label>Extract Attendee Information</label>
         <locationX>176</locationX>
-        <locationY>266</locationY>
+        <locationY>323</locationY>
         <actionName>Extract_Attendee_Information</actionName>
         <actionType>generatePromptResponse</actionType>
         <connector>
             <targetReference>Pass_to_Agent_to_Process_Attendees</targetReference>
         </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>Input:EmailMessage</name>
             <value>
                 <elementReference>$Record</elementReference>
             </value>
         </inputParameters>
+        <nameSegment>Extract_Attendee_Information</nameSegment>
+        <offset>0</offset>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <actionCalls>
+        <description>Passes the JSON + RelatedToId (Opportunity) to the Apex invocable class</description>
         <name>Pass_to_Agent_to_Process_Attendees</name>
         <label>Pass to Agent to Process Attendees</label>
         <locationX>176</locationX>
-        <locationY>374</locationY>
+        <locationY>431</locationY>
         <actionName>ProcessAppointmentTakerAttendees</actionName>
         <actionType>apex</actionType>
         <connector>
             <targetReference>Decision_Is_Success</targetReference>
         </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>jsonString</name>
             <value>
@@ -40,6 +46,8 @@
                 <elementReference>$Record.RelatedToId</elementReference>
             </value>
         </inputParameters>
+        <nameSegment>ProcessAppointmentTakerAttendees</nameSegment>
+        <offset>0</offset>
         <outputParameters>
             <assignToReference>varIsSuccess</assignToReference>
             <name>isSuccess</name>
@@ -50,15 +58,15 @@
         </outputParameters>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <decisions>
         <name>Decision_Is_Success</name>
         <label>Is Success?</label>
         <locationX>176</locationX>
-        <locationY>482</locationY>
+        <locationY>539</locationY>
         <defaultConnectorLabel>Failed</defaultConnectorLabel>
         <rules>
             <name>Outcome_Success</name>
-            <label>Success</label>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>varIsSuccess</leftValueReference>
@@ -67,9 +75,11 @@
                     <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
+            <label>Success</label>
         </rules>
     </decisions>
     <description>Processes incoming email replies to extract attendee information via AI prompt and updates Appointment Taker line items on the related Opportunity.</description>
+    <environments>Default</environments>
     <interviewLabel>Event Registration - Process Attendee Reply {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Event Registration - Process Attendee Reply</label>
     <processMetadataValues>
@@ -93,7 +103,7 @@
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>IsIncoming</field>
+            <field>Incoming</field>
             <operator>EqualTo</operator>
             <value>
                 <booleanValue>true</booleanValue>
@@ -110,7 +120,7 @@
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Obsolete</status>
     <variables>
         <name>varIsSuccess</name>
         <dataType>Boolean</dataType>
