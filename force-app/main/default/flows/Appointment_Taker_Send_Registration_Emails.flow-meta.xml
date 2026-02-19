@@ -121,6 +121,29 @@
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <assignments>
+        <name>Assign_Append_Footer</name>
+        <label>Append Email Footer</label>
+        <locationX>314</locationX>
+        <locationY>1085</locationY>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>Many thanks,
+
+Connect Meetings Team
+www.informaconnect.com
+
+This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.
+
+Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | London | SW1P 1WG</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Action_Send_Follow_Up_Email</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
         <name>Assign_Build_Missing_Line</name>
         <label>Build Missing Attendee Line</label>
         <locationX>402</locationX>
@@ -190,6 +213,22 @@
         </connector>
     </assignments>
     <assignments>
+        <name>Assign_Increment_Total</name>
+        <label>Increment Total</label>
+        <locationX>534</locationX>
+        <locationY>539</locationY>
+        <assignmentItems>
+            <assignToReference>varTotalCount</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Decision_Is_Missing</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
         <name>Assign_Init_Email_Body</name>
         <label>Initialize Email Body</label>
         <locationX>314</locationX>
@@ -221,45 +260,6 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         </assignmentItems>
         <connector>
             <targetReference>Loop_OLIs</targetReference>
-        </connector>
-    </assignments>
-    <assignments>
-        <name>Assign_Append_Footer</name>
-        <label>Append Email Footer</label>
-        <locationX>314</locationX>
-        <locationY>1085</locationY>
-        <assignmentItems>
-            <assignToReference>varEmailBody</assignToReference>
-            <operator>Add</operator>
-            <value>
-                <stringValue>Many thanks,
-
-Connect Meetings Team
-www.informaconnect.com
-
-This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.
-
-Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | London | SW1P 1WG</stringValue>
-            </value>
-        </assignmentItems>
-        <connector>
-            <targetReference>Action_Send_Follow_Up_Email</targetReference>
-        </connector>
-    </assignments>
-    <assignments>
-        <name>Assign_Increment_Total</name>
-        <label>Increment Total</label>
-        <locationX>534</locationX>
-        <locationY>539</locationY>
-        <assignmentItems>
-            <assignToReference>varTotalCount</assignToReference>
-            <operator>Add</operator>
-            <value>
-                <numberValue>1.0</numberValue>
-            </value>
-        </assignmentItems>
-        <connector>
-            <targetReference>Decision_Is_Missing</targetReference>
         </connector>
     </assignments>
     <decisions>
@@ -430,7 +430,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Obsolete</status>
     <variables>
         <name>varCounter</name>
         <dataType>Number</dataType>
