@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
-    <activeVersionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</activeVersionIdentifier>
+    <activeVersionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_4</activeVersionIdentifier>
     <description>This prompt is used to convert an inbound email reply into a raw JSON list of attendees.</description>
     <developerName>Extract_Attendee_Information</developerName>
     <masterLabel>Extract Attendee Information</masterLabel>
@@ -30,6 +30,104 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
         <primaryModel>sfdc_ai__DefaultOpenAIGPT4OmniMini</primaryModel>
         <status>Published</status>
         <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</versionIdentifier>
+    </templateVersions>
+    <templateVersions>
+        <content>You are an intelligent assistant for Connect Meetings.
+Your goal is to extract event attendee information from an incoming email.
+
+INSTRUCTIONS:
+1. Analyze the email body below.
+2. The email contains structured sections, each listing an event and its attendee details. Each section looks like:
+  &quot;Event: &lt;event_name&gt; | Type: &lt;product_type&gt;&quot;
+  followed by:
+  &quot;Attendee Name: &lt;first_name&gt; &lt;last_name&gt;&quot;
+  &quot;Attendee Email: &lt;email&gt;&quot;
+3. Extract each attendee and return a raw, valid JSON list. Do not include any formatting, code blocks, or backticks.
+4. Each JSON object must include: event_name, product_type, first_name, last_name, email.
+5. If a section has no attendee name or email filled in, omit it from the output.
+
+Example output:
+[{&quot;event_name&quot;: &quot;MEGA&quot;, &quot;product_type&quot;: &quot;Corporate&quot;, &quot;first_name&quot;: &quot;Jane&quot;, &quot;last_name&quot;: &quot;Doe&quot;, &quot;email&quot;: &quot;jane@company.com&quot;}]
+
+EMAIL DATA:
+Subject: {!$Input:EmailMessage.Subject}
+Body: {!$Input:EmailMessage.TextBody}
+
+IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code blocks, or backticks.
+</content>
+        <inputs>
+            <apiName>EmailMessage</apiName>
+            <definition>SOBJECT://EmailMessage</definition>
+            <masterLabel>EmailMessage</masterLabel>
+            <referenceName>Input:EmailMessage</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultOpenAIGPT4OmniMini</primaryModel>
+        <status>Published</status>
+        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_2</versionIdentifier>
+    </templateVersions>
+    <templateVersions>
+        <content>You are an intelligent assistant for Connect Meetings.
+Your goal is to extract event attendee information from an incoming email.
+
+INSTRUCTIONS:
+1. Analyze the email body below.
+2. Identify all people mentioned who should be registered.
+3. Return the output as a raw and valid JSON list. Do not include any formatting, code blocks, or backticks.
+4. JSON should include first name, last name, and email addresses of the users
+
+EMAIL DATA:
+Subject: {!$Input:EmailMessage.Subject}
+Body: {!$Input:EmailMessage.TextBody}
+
+IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code blocks, or backticks.
+</content>
+        <inputs>
+            <apiName>EmailMessage</apiName>
+            <definition>SOBJECT://EmailMessage</definition>
+            <masterLabel>EmailMessage</masterLabel>
+            <referenceName>Input:EmailMessage</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <status>Published</status>
+        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_3</versionIdentifier>
+    </templateVersions>
+    <templateVersions>
+        <content>You are an intelligent assistant for Connect Meetings.
+Your goal is to extract event attendee information from an incoming email.
+
+INSTRUCTIONS:
+1. Analyze the email body below.
+2. The email contains structured sections, each listing an event and its attendee details. Each section looks like:
+  &quot;Event: &lt;event_name&gt; | Type: &lt;product_type&gt;&quot;
+  followed by:
+  &quot;Attendee Name: &lt;first_name&gt; &lt;last_name&gt;&quot;
+  &quot;Attendee Email: &lt;email&gt;&quot;
+3. Extract each attendee and return a raw, valid JSON list. Do not include any formatting, code blocks, or backticks.
+4. Each JSON object must include: event_name, product_type, first_name, last_name, email.
+5. If a section has no attendee name or email filled in, omit it from the output.
+6. If the reply does not follow the structured format, still extract any names and emails you can identify, leaving event_name and product_type as empty strings.
+
+Example output:
+[{&quot;event_name&quot;: &quot;MEGA&quot;, &quot;product_type&quot;: &quot;Association&quot;, &quot;first_name&quot;: &quot;Matt&quot;, &quot;last_name&quot;: &quot;Johnson&quot;, &quot;email&quot;: &quot;matt.johnson@informa.com&quot;}]
+
+EMAIL DATA:
+Subject: {!$Input:EmailMessage.Subject}
+Body: {!$Input:EmailMessage.TextBody}
+
+IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code blocks, or backticks.
+</content>
+        <inputs>
+            <apiName>EmailMessage</apiName>
+            <definition>SOBJECT://EmailMessage</definition>
+            <masterLabel>EmailMessage</masterLabel>
+            <referenceName>Input:EmailMessage</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <status>Published</status>
+        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_4</versionIdentifier>
     </templateVersions>
     <type>einstein_gpt__flex</type>
     <visibility>Global</visibility>
