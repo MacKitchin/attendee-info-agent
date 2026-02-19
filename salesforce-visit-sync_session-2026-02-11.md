@@ -1,5 +1,6 @@
 # Agentforce Appointment Taker Registration Agent — Session Memory
-**Last updated:** 2026-02-11
+**Last updated:** 2026-02-19
+**Status: ✅ END-TO-END WORKING — First live test passed 2026-02-19**
 **Project path:** `/Users/william.kitchin/OneDrive - Informa plc/Salesforce (Agentforce)/attendee-info-agent/`
 **Target org:** `mac.kitchin@informa.com` (alias: `Connect Meetings`)
 **Deploy command pattern:** `sf project deploy start --source-dir <path> --target-org mac.kitchin@informa.com`
@@ -91,7 +92,7 @@ Reference manual: `/Users/william.kitchin/Downloads/Agentforce_Connect_Meetings_
 
 **Email configuration (modified in UI after deployment):**
 - Sender Type: OrgWideEmailAddress
-- Sender Address: `production@connectmeetings.com`
+- Sender Address: `attendeeinfo@informa.com` *(changed from `production@connectmeetings.com` on 2026-02-19)*
 - Follow-up subject: `Action Required: Attendee Details for your Event Registrations`
 - Related Record ID: `$Record.Id` (Opportunity)
 
@@ -113,10 +114,10 @@ Reference manual: `/Users/william.kitchin/Downloads/Agentforce_Connect_Meetings_
 - Input parameter name: `Input:EmailMessage`
 - Output variable: `promptResponse`
 
-### Phase 4: Flow B — "Event Registration - Process Attendee Reply" ✅ DEPLOYED (Draft)
+### Phase 4: Flow B — "Event Registration - Process Attendee Reply" ✅ DEPLOYED & ACTIVE
 **File:** `force-app/main/default/flows/Event_Registration_Process_Attendee_Reply.flow-meta.xml`
 **API Name:** `Event_Registration_Process_Attendee_Reply`
-**Status in org:** Draft (NOT yet activated)
+**Status in org:** Active *(activated 2026-02-19)*
 
 **Trigger:** Record-Triggered on EmailMessage (After Create)
 **Entry conditions (AND):**
@@ -130,53 +131,51 @@ Reference manual: `/Users/william.kitchin/Downloads/Agentforce_Connect_Meetings_
 
 ---
 
-## 4. Blocking Issue: Email Routing (UNRESOLVED)
+## 4. Email Routing — Apex InboundEmailHandler ✅ FULLY RESOLVED
 
-### The Problem
-When Flow A sends the follow-up email from `production@connectmeetings.com`, the signer replies to that address. But **no mechanism exists** to route that reply INTO Salesforce as an EmailMessage record. Without an EmailMessage, Flow B never triggers.
+### Phase 5: AttendeeReplyEmailHandler ✅ DEPLOYED & PASSING
+**Files:**
+- `force-app/main/default/classes/AttendeeReplyEmailHandler.cls` (89 lines)
+- `force-app/main/default/classes/AttendeeReplyEmailHandler.cls-meta.xml`
+- `force-app/main/default/classes/AttendeeReplyEmailHandlerTest.cls` (159 lines)
+- `force-app/main/default/classes/AttendeeReplyEmailHandlerTest.cls-meta.xml`
+- **4/4 tests passing**
 
-### Current Email Infrastructure
-- **Org-Wide Addresses:** `production@bizbash.com`, `production@connectmeetings.com`, `wei.zheng@informa.com`
-- **Email-to-Case:** Enabled with On-Demand Service, but **no Routing Addresses defined**
-- **Email Services:** None configured
+**How it works:**
+1. Receives inbound email via Salesforce Email Service
+2. Checks subject contains `Action Required: Attendee Details for your Event Registrations`
+3. Queries original outgoing EmailMessage by subject + sender's email in ToAddress
+4. Inserts incoming EmailMessage linked to the same Opportunity (`RelatedToId`)
+5. Sets `ReplyToEmailMessageId` to link the reply to the original
+6. Flow B triggers on the new EmailMessage insert
 
-### Options Evaluated
-1. **Email-to-Case** — Would create unwanted Cases; EmailMessage `RelatedToId` would point to Case (not Opportunity), requiring Flow B modifications
-2. **Apex InboundEmailHandler + Email Service** (RECOMMENDED) — Full control, creates EmailMessage linked directly to Opportunity, no unwanted Cases. Requires:
-   - Apex class (~60 lines) implementing `Messaging.InboundEmailHandler`
-   - Email Service configuration in Setup UI
-   - Email forwarding from `production@connectmeetings.com` to SF-generated service address
-3. **Dedicated Gmail address** (`attendeeinfo@connectmeetings.com`) — Created but could not receive emails; abandoned
+### Email Service Configuration ✅ COMPLETE
+- Email Service Name: `AttendeeReplyHandler`
+- Apex Class: `AttendeeReplyEmailHandler`
+- SF Email Service Address: `attendeereplyemailhandler@o-23lkusfw7mgqvhycorj7ar1qdafgul67ylcf51i6y4y6urhrg0.3-1h2naeac.usa594.apex.salesforce.com`
+- **Forwarding:** Exchange mailbox `attendeeinfo@informa.com` forwards all inbound mail to SF Email Service address (configured in Exchange Admin Center)
 
-### Next Step
-Build the **Apex InboundEmailHandler** class. The handler should:
-1. Receive incoming email at the Email Service address
-2. Check subject matches the registration pattern
-3. Query the original outgoing EmailMessage to find the related Opportunity
-4. Insert an incoming EmailMessage linked to that Opportunity
-5. This triggers Flow B automatically
+### Background: Options Evaluated
+1. **Email-to-Case** — Rejected (creates unwanted Cases; `RelatedToId` → Case, not Opportunity)
+2. **Apex InboundEmailHandler + Email Service** — CHOSEN (full control, no Cases)
+3. **Dedicated Gmail address** — Abandoned (could not receive emails)
 
 ---
 
-## 5. What Remains (Ordered)
+## 5. Status & Remaining Work
 
-### Immediate: Inbound Email Handler
-- [ ] Create `AttendeeReplyEmailHandler.cls` implementing `Messaging.InboundEmailHandler`
-- [ ] Create test class `AttendeeReplyEmailHandlerTest.cls`
-- [ ] Deploy both classes
-- [ ] Configure Email Service in Setup UI (point to handler, generate address)
-- [ ] Set up email forwarding from `production@connectmeetings.com` to the SF service address
-
-### Then: Activate & Test
-- [ ] Activate Flow B (currently Draft)
-- [ ] E2E test: Create Opportunity → Close Won → Verify follow-up email sent → Reply with attendee list → Verify OLIs updated
-- [ ] Verify FLS permissions for all profiles that will run the flow
+### ✅ Completed (2026-02-19)
+- [x] Email Service configured (AttendeeReplyHandler → AttendeeReplyEmailHandler)
+- [x] Exchange forwarding set up (attendeeinfo@informa.com → SF Email Service)
+- [x] Flow B activated
+- [x] E2E test passed: Opp closed won → follow-up email sent → replied with attendee info → OLI updated with name + email
 
 ### Optional Enhancements
 - [ ] Add fault handling / error notifications to Flow B
-- [ ] Add "send confirmation email after successful processing" step to Flow B
-- [ ] Consider what happens if signer sends multiple replies
-- [ ] Prompt template tuning (test with various email reply formats)
+- [ ] Add confirmation email back to signer after successful attendee processing
+- [ ] Consider behavior when signer sends multiple replies (currently each reply re-queries oldest open slots)
+- [ ] Prompt template tuning (test with various email reply formats / edge cases)
+- [ ] Verify FLS permissions for other profiles that may run the flows
 
 ---
 
@@ -211,6 +210,10 @@ Build the **Apex InboundEmailHandler** class. The handler should:
 ```
 force-app/main/default/
 ├── classes/
+│   ├── AttendeeReplyEmailHandler.cls                 ← Email Service handler (DEPLOYED)
+│   ├── AttendeeReplyEmailHandler.cls-meta.xml
+│   ├── AttendeeReplyEmailHandlerTest.cls             ← Test class (4/4 PASSING)
+│   ├── AttendeeReplyEmailHandlerTest.cls-meta.xml
 │   ├── ProcessAppointmentTakerAttendees.cls          ← Invocable Apex (DEPLOYED)
 │   ├── ProcessAppointmentTakerAttendees.cls-meta.xml
 │   ├── ProcessAppointmentTakerAttendeesTest.cls      ← Test class (7/7 PASSING)
@@ -219,7 +222,8 @@ force-app/main/default/
 │   ├── Appointment_Taker_Send_Registration_Emails.flow-meta.xml  ← Flow A (ACTIVE in org)
 │   └── Event_Registration_Process_Attendee_Reply.flow-meta.xml   ← Flow B (DRAFT in org)
 └── genAiPromptTemplates/
-    └── Extract_Attendee_Information.genAiPromptTemplate-meta.xml  ← Prompt (PUBLISHED)
+    ├── Extract_Attendee_Information.genAiPromptTemplate-meta.xml  ← Prompt (PUBLISHED)
+    └── Opportunity_Creation.genAiPromptTemplate-meta.xml
 ```
 
 ---
