@@ -38,6 +38,16 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
 
             String fromAddr = email.fromAddress;
 
+            // Strip quoted reply content from the plain text body.
+            // Outlook/Exchange appends the original message after a line of underscores.
+            // We keep only the top portion (the actual reply) to avoid passing
+            // oversized payloads to the Einstein prompt template.
+            String plainBody = email.plainTextBody != null ? email.plainTextBody : '';
+            Integer separatorIdx = plainBody.indexOf('________________________________');
+            if (separatorIdx > 0) {
+                plainBody = plainBody.substring(0, separatorIdx).trim();
+            }
+
             // Find the most recent outgoing registration email sent TO this sender
             // to determine the related Opportunity
             List<EmailMessage> originals = [
@@ -63,8 +73,8 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
             // This insert triggers Flow B (Event Registration - Process Attendee Reply).
             EmailMessage em = new EmailMessage();
             em.Subject = subject;
-            em.TextBody = email.plainTextBody;
-            em.HtmlBody = email.htmlBody;
+            em.TextBody = plainBody;  // stripped reply content only
+            em.HtmlBody = null;       // omit HTML; prompt template uses TextBody only
             em.FromAddress = fromAddr;
             em.FromName = email.fromName;
             em.ToAddress = email.toAddresses != null

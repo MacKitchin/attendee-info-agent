@@ -132,6 +132,47 @@ private class AttendeeReplyEmailHandlerTest {
     }
 
     /**
+     * @description When the email body contains the Outlook reply separator, only the
+     * content BEFORE the separator should be stored as TextBody, and HtmlBody should be null.
+     * This prevents oversized payloads being sent to the Einstein prompt template.
+     */
+    @IsTest
+    static void testQuotedBodyStripping_onlyReplyContentStored() {
+        Messaging.InboundEmail email = new Messaging.InboundEmail();
+        email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
+        email.fromAddress = 'signer@example.com';
+        email.fromName = 'Test Signer';
+        email.toAddresses = new List<String>{ 'attendeeinfo@informa.com' };
+        email.plainTextBody =
+            'Jane Doe\njane@example.com\n\n' +
+            '________________________________\n' +
+            'From: Attendee Information <attendeeinfo@informa.com>\n' +
+            'Subject: Action Required: Attendee Details for your Event Registrations\n\n' +
+            'Hi Signer, please fill in your attendees below.';
+        email.htmlBody = '<html><body>some big html</body></html>';
+
+        Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+        envelope.fromAddress = 'signer@example.com';
+
+        AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
+
+        Test.startTest();
+        Messaging.InboundEmailResult result = handler.handleInboundEmail(email, envelope);
+        Test.stopTest();
+
+        System.assertEquals(true, result.success, 'Handler should succeed');
+
+        EmailMessage created = [SELECT TextBody, HtmlBody FROM EmailMessage WHERE Incoming = true LIMIT 1];
+        System.assert(!created.TextBody.contains('________________________________'),
+            'TextBody should not contain the Outlook separator');
+        System.assert(!created.TextBody.contains('From: Attendee Information'),
+            'Quoted original email should be stripped from TextBody');
+        System.assert(created.TextBody.contains('Jane Doe'),
+            'Reply content should be preserved in TextBody');
+        System.assertEquals(null, created.HtmlBody, 'HtmlBody should be null to keep payload small');
+    }
+
+    /**
      * @description Null subject should be silently accepted (doesn't match pattern).
      */
     @IsTest
