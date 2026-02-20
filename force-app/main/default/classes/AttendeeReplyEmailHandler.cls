@@ -9,102 +9,222 @@
  * @date 2026-02-11
  */
 public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler {
+  @TestVisible
+  private static final String SUBJECT_PATTERN = 'Action Required: Attendee Details for your Event Registrations';
+  @TestVisible
+  private static final Pattern REG_TOKEN_PATTERN = Pattern.compile(
+    '(?i)\\[REG:([a-zA-Z0-9]{15,18})\\]'
+  );
+  private static final Integer LEGACY_LOOKBACK_DAYS = 60;
 
-    @TestVisible
-    private static final String SUBJECT_PATTERN = 'Action Required: Attendee Details for your Event Registrations';
+  /**
+   * @description Handles an inbound email. If the subject matches the registration
+   * pattern, queries for the original outgoing EmailMessage to find the related
+   * Opportunity, then inserts a new incoming EmailMessage linked to that Opportunity.
+   * @param email The inbound email
+   * @param envelope The inbound email envelope
+   * @return Messaging.InboundEmailResult indicating success or failure
+   */
+  public Messaging.InboundEmailResult handleInboundEmail(
+    Messaging.InboundEmail email,
+    Messaging.InboundEnvelope envelope
+  ) {
+    Messaging.InboundEmailResult result = new Messaging.InboundEmailResult();
 
-    /**
-     * @description Handles an inbound email. If the subject matches the registration
-     * pattern, queries for the original outgoing EmailMessage to find the related
-     * Opportunity, then inserts a new incoming EmailMessage linked to that Opportunity.
-     * @param email The inbound email
-     * @param envelope The inbound email envelope
-     * @return Messaging.InboundEmailResult indicating success or failure
-     */
-    public Messaging.InboundEmailResult handleInboundEmail(
-        Messaging.InboundEmail email,
-        Messaging.InboundEnvelope envelope
-    ) {
-        Messaging.InboundEmailResult result = new Messaging.InboundEmailResult();
+    try {
+      String subject = email.subject != null ? email.subject : '';
 
-        try {
-            String subject = email.subject != null ? email.subject : '';
-
-            // Only process replies to our registration emails; silently accept others
-            if (!subject.containsIgnoreCase(SUBJECT_PATTERN)) {
-                result.success = true;
-                return result;
-            }
-
-            String fromAddr = email.fromAddress;
-
-            // Strip quoted reply content from the plain text body.
-            // Outlook/Exchange appends the original message after a line of underscores.
-            // We keep only the top portion (the actual reply) to avoid passing
-            // oversized payloads to the Einstein prompt template.
-            String plainBody = email.plainTextBody != null ? email.plainTextBody : '';
-            Integer separatorIdx = plainBody.indexOf('________________________________');
-            if (separatorIdx > 0) {
-                plainBody = plainBody.substring(0, separatorIdx).trim();
-            }
-
-            // Decode HTML entities that Outlook injects into the plain text body.
-            // These cause UndefinedResolutionError in the Einstein prompt template engine.
-            plainBody = plainBody
-                .replace('&amp;',  '&')
-                .replace('&lt;',   '<')
-                .replace('&gt;',   '>')
-                .replace('&quot;', '"')
-                .replace('&#39;',  '\'')
-                .replace('&#124;', '|')
-                .replace('&nbsp;', ' ');
-
-            // Find the most recent outgoing registration email sent TO this sender
-            // to determine the related Opportunity
-            List<EmailMessage> originals = [
-                SELECT Id, RelatedToId
-                FROM EmailMessage
-                WHERE Incoming = false
-                  AND Subject = :SUBJECT_PATTERN
-                  AND ToAddress LIKE :('%' + fromAddr + '%')
-                  AND RelatedToId != null
-                ORDER BY CreatedDate DESC
-                LIMIT 1
-            ];
-
-            if (originals.isEmpty()) {
-                result.success = false;
-                result.message = 'No matching outgoing registration email found for: ' + fromAddr;
-                return result;
-            }
-
-            Id opportunityId = originals[0].RelatedToId;
-
-            // Build and insert the incoming EmailMessage linked to the Opportunity.
-            // This insert triggers Flow B (Event Registration - Process Attendee Reply).
-            EmailMessage em = new EmailMessage();
-            em.Subject = subject;
-            em.TextBody = plainBody;  // stripped reply content only
-            em.HtmlBody = null;       // omit HTML; prompt template uses TextBody only
-            em.FromAddress = fromAddr;
-            em.FromName = email.fromName;
-            em.ToAddress = email.toAddresses != null
-                ? String.join(email.toAddresses, '; ')
-                : '';
-            em.Incoming = true;
-            em.Status = '0'; // New
-            em.MessageDate = System.now();
-            em.RelatedToId = opportunityId;
-            em.ReplyToEmailMessageId = originals[0].Id;
-
-            insert em;
-
-            result.success = true;
-        } catch (Exception e) {
-            result.success = false;
-            result.message = 'Error processing attendee reply: ' + e.getMessage();
-        }
-
+      // Only process replies to our registration emails; silently accept others
+      if (!subject.containsIgnoreCase(SUBJECT_PATTERN)) {
+        result.success = true;
         return result;
+      }
+
+      String fromAddr = normalizeEmail(email.fromAddress);
+      if (String.isBlank(fromAddr)) {
+        result.success = false;
+        result.message = 'Sender email is missing on inbound message.';
+        return result;
+      }
+
+      // Strip quoted reply content from the plain text body.
+      // Outlook/Exchange appends the original message after a line of underscores.
+      // We keep only the top portion (the actual reply) to avoid passing
+      // oversized payloads to the Einstein prompt template.
+      String plainBody = email.plainTextBody != null ? email.plainTextBody : '';
+      Integer separatorIdx = plainBody.indexOf(
+        '________________________________'
+      );
+      if (separatorIdx > 0) {
+        plainBody = plainBody.substring(0, separatorIdx).trim();
+      }
+
+      // Decode HTML entities that Outlook injects into the plain text body.
+      // These cause UndefinedResolutionError in the Einstein prompt template engine.
+      plainBody = plainBody
+        .replace('&amp;', '&')
+        .replace('&lt;', '<')
+        .replace('&gt;', '>')
+        .replace('&quot;', '"')
+        .replace('&#39;', '\'')
+        .replace('&#124;', '|')
+        .replace('&nbsp;', ' ');
+
+      Id opportunityId;
+      Id replyToEmailMessageId;
+
+      // Preferred route: deterministic token in subject, e.g. [REG:006...]
+      Id tokenOpportunityId = extractOpportunityIdFromSubject(subject);
+      if (tokenOpportunityId != null) {
+        EmailMessage tokenMatch = findOutgoingByTokenAndSender(
+          tokenOpportunityId,
+          fromAddr
+        );
+        if (tokenMatch == null) {
+          result.success = false;
+          result.message = 'Registration token found, but sender does not match the expected recipient.';
+          return result;
+        }
+        opportunityId = tokenOpportunityId;
+        replyToEmailMessageId = tokenMatch.Id;
+      } else {
+        // Backward-compatible fallback for legacy emails without token
+        EmailMessage legacyMatch = findLegacyOutgoingBySender(fromAddr);
+        if (legacyMatch == null) {
+          result.success = false;
+          result.message =
+            'No matching outgoing registration email found for: ' + fromAddr;
+          return result;
+        }
+        opportunityId = legacyMatch.RelatedToId;
+        replyToEmailMessageId = legacyMatch.Id;
+      }
+
+      // Build and insert the incoming EmailMessage linked to the Opportunity.
+      // This insert triggers Flow B (Event Registration - Process Attendee Reply).
+      EmailMessage em = new EmailMessage();
+      em.Subject = subject;
+      em.TextBody = plainBody; // stripped reply content only
+      em.HtmlBody = null; // omit HTML; prompt template uses TextBody only
+      em.FromAddress = fromAddr;
+      em.FromName = email.fromName;
+      em.ToAddress = email.toAddresses != null
+        ? String.join(email.toAddresses, '; ')
+        : '';
+      em.Incoming = true;
+      em.Status = '0'; // New
+      em.MessageDate = System.now();
+      em.RelatedToId = opportunityId;
+      em.ReplyToEmailMessageId = replyToEmailMessageId;
+
+      insert em;
+
+      result.success = true;
+    } catch (Exception e) {
+      result.success = false;
+      result.message = 'Error processing attendee reply: ' + e.getMessage();
     }
+
+    return result;
+  }
+
+  private static EmailMessage findOutgoingByTokenAndSender(
+    Id opportunityId,
+    String fromAddr
+  ) {
+    String token = '[REG:' + String.valueOf(opportunityId) + ']';
+    List<EmailMessage> candidates = [
+      SELECT Id, ToAddress
+      FROM EmailMessage
+      WHERE
+        Incoming = FALSE
+        AND RelatedToId = :opportunityId
+        AND Subject LIKE :('%' + token + '%')
+      ORDER BY CreatedDate DESC
+      LIMIT 25
+    ];
+
+    for (EmailMessage candidate : candidates) {
+      if (addressListContains(candidate.ToAddress, fromAddr)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  private static EmailMessage findLegacyOutgoingBySender(String fromAddr) {
+    Datetime cutoff = System.now().addDays(-LEGACY_LOOKBACK_DAYS);
+    String subjectPrefix = SUBJECT_PATTERN + '%';
+    List<EmailMessage> candidates = [
+      SELECT Id, RelatedToId, ToAddress
+      FROM EmailMessage
+      WHERE
+        Incoming = FALSE
+        AND RelatedToId != NULL
+        AND Subject LIKE :subjectPrefix
+        AND CreatedDate >= :cutoff
+      ORDER BY CreatedDate DESC
+      LIMIT 50
+    ];
+
+    for (EmailMessage candidate : candidates) {
+      if (addressListContains(candidate.ToAddress, fromAddr)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  @TestVisible
+  private static Id extractOpportunityIdFromSubject(String subject) {
+    if (String.isBlank(subject)) {
+      return null;
+    }
+    Matcher m = REG_TOKEN_PATTERN.matcher(subject);
+    if (!m.find()) {
+      return null;
+    }
+    String rawId = m.group(1);
+    try {
+      return (Id) rawId;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  @TestVisible
+  private static Boolean addressListContains(
+    String addressList,
+    String targetEmail
+  ) {
+    if (String.isBlank(addressList) || String.isBlank(targetEmail)) {
+      return false;
+    }
+    String target = normalizeEmail(targetEmail);
+    String normalizedList = addressList.replace(',', ';');
+    for (String token : normalizedList.split(';')) {
+      if (target == normalizeEmail(token)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static String normalizeEmail(String raw) {
+    if (String.isBlank(raw)) {
+      return null;
+    }
+    String value = raw.trim().toLowerCase();
+
+    Integer lt = value.indexOf('<');
+    Integer gt = value.indexOf('>');
+    if (lt >= 0 && gt > lt) {
+      value = value.substring(lt + 1, gt).trim();
+    }
+
+    if (value.startsWith('"') && value.endsWith('"') && value.length() > 1) {
+      value = value.substring(1, value.length() - 1);
+    }
+    return String.isBlank(value) ? null : value;
+  }
 }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
         <name>Action_Send_Completed_Email</name>
@@ -11,7 +11,8 @@
         <inputParameters>
             <name>emailAddresses</name>
             <value>
-                <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+                <elementReference
+        >$Record.Signer_Contact__r.Email</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -38,7 +39,8 @@
             <name>emailBody</name>
             <value>
                 <inputConfiguratorMode>Custom</inputConfiguratorMode>
-                <stringValue>&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you! All appointment taker registrations have been assigned to your attendees.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Best,&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;img src=&quot;//:0&quot;&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(0, 34, 68); font-size: 10.5pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(94, 83, 215); font-size: 12px;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
+                <stringValue
+        >&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you! All appointment taker registrations have been assigned to your attendees.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Best,&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;img src=&quot;//:0&quot;&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(0, 34, 68); font-size: 10.5pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(94, 83, 215); font-size: 12px;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -67,7 +69,8 @@
         <inputParameters>
             <name>emailAddresses</name>
             <value>
-                <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+                <elementReference
+        >$Record.Signer_Contact__r.Email</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -87,7 +90,8 @@
         <inputParameters>
             <name>emailSubject</name>
             <value>
-                <stringValue>Action Required: Attendee Details for your Event Registrations</stringValue>
+                <stringValue
+        >Action Required: Attendee Details for your Event Registrations [REG:{!$Record.Id}]</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -244,7 +248,8 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
             <value>
-                <elementReference>$Record.Signer_Contact__r.FirstName</elementReference>
+                <elementReference
+        >$Record.Signer_Contact__r.FirstName</elementReference>
             </value>
         </assignmentItems>
         <assignmentItems>
@@ -326,14 +331,16 @@ Thank you for your purchase! Please reply to this email with the attendee name a
             <name>Outcome_Yes_Missing</name>
             <conditionLogic>or</conditionLogic>
             <conditions>
-                <leftValueReference>Loop_OLIs.Attendee_Name__c</leftValueReference>
+                <leftValueReference
+        >Loop_OLIs.Attendee_Name__c</leftValueReference>
                 <operator>IsNull</operator>
                 <rightValue>
                     <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
             <conditions>
-                <leftValueReference>Loop_OLIs.Attendee_Email__c</leftValueReference>
+                <leftValueReference
+        >Loop_OLIs.Attendee_Email__c</leftValueReference>
                 <operator>IsNull</operator>
                 <rightValue>
                     <booleanValue>true</booleanValue>
@@ -345,9 +352,11 @@ Thank you for your purchase! Please reply to this email with the attendee name a
             <label>Yes</label>
         </rules>
     </decisions>
-    <description>Sends registration emails when Opportunity moves to Closed Won with Appointment Taker products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
+    <description
+  >Sends registration emails when Opportunity moves to Closed Won with Appointment Taker products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
     <environments>Default</environments>
-    <interviewLabel>Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
+    <interviewLabel
+  >Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Appointment Taker - Send Registration Emails</label>
     <loops>
         <name>Loop_OLIs</name>
@@ -381,7 +390,8 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <label>Get Appointment Taker OLIs</label>
         <locationX>314</locationX>
         <locationY>323</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Assign_Init_Email_Body</targetReference>
         </connector>
@@ -410,7 +420,8 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <connector>
             <targetReference>Get_Appointment_Taker_OLIs</targetReference>
         </connector>
-        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <doesRequireRecordChangedToMeetCriteria
+    >true</doesRequireRecordChangedToMeetCriteria>
         <filterLogic>and</filterLogic>
         <filters>
             <field>StageName</field>
