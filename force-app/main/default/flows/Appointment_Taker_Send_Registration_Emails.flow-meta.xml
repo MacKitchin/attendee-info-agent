@@ -4,7 +4,7 @@
         <name>Action_Send_Completed_Email</name>
         <label>Registration Completed Email</label>
         <locationX>50</locationX>
-        <locationY>1139</locationY>
+        <locationY>1247</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -62,7 +62,7 @@
         <name>Action_Send_Follow_Up_Email</name>
         <label>Send Follow Up Email</label>
         <locationX>314</locationX>
-        <locationY>1139</locationY>
+        <locationY>1355</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -85,6 +85,12 @@
             <value>
                 <inputConfiguratorMode>Custom</inputConfiguratorMode>
                 <stringValue>attendeeinfo@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>composeEmailContent</name>
+            <value>
+                <stringValue>True</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -128,7 +134,7 @@
         <name>Assign_Append_Footer</name>
         <label>Append Email Footer</label>
         <locationX>314</locationX>
-        <locationY>1085</locationY>
+        <locationY>1247</locationY>
         <assignmentItems>
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
@@ -151,7 +157,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
         <name>Assign_Build_Missing_Line</name>
         <label>Build Missing Attendee Line</label>
         <locationX>402</locationX>
-        <locationY>755</locationY>
+        <locationY>863</locationY>
         <assignmentItems>
             <assignToReference>varMissingCount</assignToReference>
             <operator>Add</operator>
@@ -177,21 +183,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
             <value>
-                <stringValue>. Event: </stringValue>
-            </value>
-        </assignmentItems>
-        <assignmentItems>
-            <assignToReference>varEmailBody</assignToReference>
-            <operator>Add</operator>
-            <value>
-                <elementReference>Loop_OLIs.Event_Name__c</elementReference>
-            </value>
-        </assignmentItems>
-        <assignmentItems>
-            <assignToReference>varEmailBody</assignToReference>
-            <operator>Add</operator>
-            <value>
-                <stringValue> | Registration Type: </stringValue>
+                <stringValue>. Registration Type: </stringValue>
             </value>
         </assignmentItems>
         <assignmentItems>
@@ -205,7 +197,23 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
             <value>
-                <stringValue> | Type: </stringValue>
+                <stringValue>
+   Event Name: </stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Loop_OLIs.Event_Name__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue>
+   Market/Track: </stringValue>
             </value>
         </assignmentItems>
         <assignmentItems>
@@ -234,7 +242,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
         <name>Assign_Increment_Total</name>
         <label>Increment Total</label>
         <locationX>534</locationX>
-        <locationY>539</locationY>
+        <locationY>647</locationY>
         <assignmentItems>
             <assignToReference>varTotalCount</assignToReference>
             <operator>Add</operator>
@@ -250,7 +258,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
         <name>Assign_Init_Email_Body</name>
         <label>Initialize Email Body</label>
         <locationX>314</locationX>
-        <locationY>377</locationY>
+        <locationY>431</locationY>
         <assignmentItems>
             <assignToReference>varEmailBody</assignToReference>
             <operator>Assign</operator>
@@ -272,7 +280,9 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <value>
                 <stringValue>,
 
-Thank you for your purchase! Please reply to this email with the attendee name and email address for each registration listed below.
+Thank you for your recent purchase! To complete your event registrations, we need the name and email address for each attendee listed below.
+
+Simply fill in the details and reply to this email — or just list them in your own words. We&apos;ll take care of the rest.
 
 </stringValue>
             </value>
@@ -285,7 +295,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <name>Decision_All_Registered</name>
         <label>Are all attendees registered?</label>
         <locationX>314</locationX>
-        <locationY>1031</locationY>
+        <locationY>1139</locationY>
         <defaultConnectorLabel>No AT Products</defaultConnectorLabel>
         <rules>
             <name>Outcome_All_Registered</name>
@@ -336,7 +346,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <name>Decision_Is_Missing</name>
         <label>Is Attendee Info Missing?</label>
         <locationX>534</locationX>
-        <locationY>647</locationY>
+        <locationY>755</locationY>
         <defaultConnector>
             <targetReference>Loop_OLIs</targetReference>
         </defaultConnector>
@@ -369,20 +379,20 @@ Thank you for your purchase! Please reply to this email with the attendee name a
     <description
   >Sends registration emails when Opportunity moves to Closed Won with supported attendee-registration products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
     <environments>Default</environments>
-    <interviewLabel
-  >Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>Appointment Taker - Send Registration Emails</label>
     <formulas>
         <name>Formula_Registration_Type</name>
         <dataType>String</dataType>
         <expression
     >IF({!Loop_OLIs.Product2Id} = &quot;01t4X000004U14AQAS&quot;, &quot;Non-Appointment Taker&quot;, &quot;Appointment Taker&quot;)</expression>
     </formulas>
+    <interviewLabel
+  >Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Appointment Taker - Send Registration Emails</label>
     <loops>
         <name>Loop_OLIs</name>
         <label>Loop OLIs</label>
         <locationX>314</locationX>
-        <locationY>431</locationY>
+        <locationY>539</locationY>
         <collectionReference>Get_Appointment_Taker_OLIs</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -468,7 +478,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
     <variables>
         <name>varCounter</name>
         <dataType>Number</dataType>

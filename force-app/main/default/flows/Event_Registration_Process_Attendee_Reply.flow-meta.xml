@@ -2,64 +2,64 @@
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
         <description
-    >Calls your Flex Prompt Template to parse the email body into attendee JSON</description>
-        <name>Extract_Attendee_Information</name>
-        <label>Extract Attendee Information</label>
-        <locationX>176</locationX>
-        <locationY>323</locationY>
-        <actionName>Extract_Attendee_Information</actionName>
-        <actionType>generatePromptResponse</actionType>
-        <connector>
-            <targetReference
-      >Pass_to_Agent_to_Process_Attendees</targetReference>
-        </connector>
+    >Sends a failure notification email for attendee reply processing.</description>
+        <name>Action_Send_Failure_Notification</name>
+        <label>Send Failure Notification</label>
+        <locationX>314</locationX>
+        <locationY>647</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
-            <name>Input:EmailMessage</name>
+            <name>emailAddresses</name>
             <value>
-                <elementReference>$Record</elementReference>
-            </value>
-        </inputParameters>
-        <nameSegment>Extract_Attendee_Information</nameSegment>
-        <offset>0</offset>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </actionCalls>
-    <actionCalls>
-        <description
-    >Passes the JSON + RelatedToId (Opportunity) to the Apex invocable class</description>
-        <name>Pass_to_Agent_to_Process_Attendees</name>
-        <label>Pass to Agent to Process Attendees</label>
-        <locationX>176</locationX>
-        <locationY>431</locationY>
-        <actionName>ProcessAppointmentTakerAttendees</actionName>
-        <actionType>apex</actionType>
-        <connector>
-            <targetReference>Decision_Is_Success</targetReference>
-        </connector>
-        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <inputParameters>
-            <name>jsonString</name>
-            <value>
-                <elementReference
-        >Extract_Attendee_Information.promptResponse</elementReference>
+                <stringValue>mac.kitchin@informa.com</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
-            <name>opportunityId</name>
+            <name>senderType</name>
+            <value>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <stringValue>attendeeinfo@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue
+        >[Attendee Reply][FAILED] {!$Record.Subject}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Flow: Event Registration - Process Attendee Reply
+Result: Failed
+OpportunityId: {!$Record.RelatedToId}
+EmailMessageId: {!$Record.Id}
+From: {!$Record.FromAddress}
+Status Message: {!varStatusMessage}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
             <value>
                 <elementReference>$Record.RelatedToId</elementReference>
             </value>
         </inputParameters>
-        <nameSegment>ProcessAppointmentTakerAttendees</nameSegment>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
-        <outputParameters>
-            <assignToReference>varIsSuccess</assignToReference>
-            <name>isSuccess</name>
-        </outputParameters>
-        <outputParameters>
-            <assignToReference>varStatusMessage</assignToReference>
-            <name>statusMessage</name>
-        </outputParameters>
     </actionCalls>
     <actionCalls>
         <description
@@ -124,67 +124,89 @@ Status Message: {!varStatusMessage}</stringValue>
     </actionCalls>
     <actionCalls>
         <description
-    >Sends a failure notification email for attendee reply processing.</description>
-        <name>Action_Send_Failure_Notification</name>
-        <label>Send Failure Notification</label>
-        <locationX>314</locationX>
-        <locationY>647</locationY>
-        <actionName>emailSimple</actionName>
-        <actionType>emailSimple</actionType>
+    >Calls your Flex Prompt Template to parse the email body into attendee JSON</description>
+        <name>Extract_Attendee_Information</name>
+        <label>Extract Attendee Information</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <actionName>Extract_Attendee_Information</actionName>
+        <actionType>generatePromptResponse</actionType>
+        <connector>
+            <targetReference
+      >Pass_to_Agent_to_Process_Attendees</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
-            <name>emailAddresses</name>
+            <name>Input:EmailMessage</name>
             <value>
-                <stringValue>mac.kitchin@informa.com</stringValue>
+                <elementReference>$Record</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Extract_Attendee_Information</nameSegment>
+        <offset>0</offset>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+    <actionCalls>
+        <description
+    >Passes the JSON + RelatedToId (Opportunity) to the Apex invocable class</description>
+        <name>Pass_to_Agent_to_Process_Attendees</name>
+        <label>Pass to Agent to Process Attendees</label>
+        <locationX>176</locationX>
+        <locationY>431</locationY>
+        <actionName>ProcessAppointmentTakerAttendees</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Decision_Is_Success</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>jsonString</name>
+            <value>
+                <elementReference
+        >Extract_Attendee_Information.promptResponse</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
-            <name>senderType</name>
-            <value>
-                <stringValue>OrgWideEmailAddress</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>senderAddress</name>
-            <value>
-                <stringValue>attendeeinfo@informa.com</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailSubject</name>
-            <value>
-                <stringValue
-        >[Attendee Reply][FAILED] {!$Record.Subject}</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailBody</name>
-            <value>
-                <stringValue>Flow: Event Registration - Process Attendee Reply
-Result: Failed
-OpportunityId: {!$Record.RelatedToId}
-EmailMessageId: {!$Record.Id}
-From: {!$Record.FromAddress}
-Status Message: {!varStatusMessage}</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>relatedRecordId</name>
+            <name>opportunityId</name>
             <value>
                 <elementReference>$Record.RelatedToId</elementReference>
             </value>
         </inputParameters>
-        <inputParameters>
-            <name>logEmailOnSend</name>
-            <value>
-                <booleanValue>true</booleanValue>
-            </value>
-        </inputParameters>
-        <nameSegment>emailSimple</nameSegment>
+        <nameSegment>ProcessAppointmentTakerAttendees</nameSegment>
         <offset>0</offset>
+        <outputParameters>
+            <assignToReference>varIsSuccess</assignToReference>
+            <name>isSuccess</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varStatusMessage</assignToReference>
+            <name>statusMessage</name>
+        </outputParameters>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Assign_Fault_Message</name>
+        <label>Capture Fault Message</label>
+        <locationX>500</locationX>
+        <locationY>431</locationY>
+        <assignmentItems>
+            <assignToReference>varStatusMessage</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Action_Send_Failure_Notification</targetReference>
+        </connector>
+    </assignments>
     <decisions>
         <name>Decision_Is_Success</name>
         <label>Is Success?</label>
@@ -256,7 +278,7 @@ Status Message: {!varStatusMessage}</stringValue>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Draft</status>
     <variables>
         <name>varIsSuccess</name>
         <dataType>Boolean</dataType>
