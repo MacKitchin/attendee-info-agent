@@ -6,6 +6,7 @@
  * @group Attendee Processing
  * @date 2026-02-10
  * @modified 2026-02-19 — Added group-fill assignment by Event Name + Product Type
+ * @modified 2026-02-24 — Added Event_Attendee_Contact__c Contact lookup by attendee email + Opportunity AccountId
  */
 public with sharing class ProcessAppointmentTakerAttendees {
   /**
@@ -149,6 +150,41 @@ public with sharing class ProcessAppointmentTakerAttendees {
       );
     }
 
+    // Resolve Opportunity AccountId for Contact matching
+    List<Opportunity> opps = [
+      SELECT AccountId
+      FROM Opportunity
+      WHERE Id = :req.opportunityId
+      WITH USER_MODE
+      LIMIT 1
+    ];
+    Id accountId = (!opps.isEmpty()) ? opps[0].AccountId : null;
+
+    // Bulk-resolve attendee emails to Contact Ids on the Opportunity's Account
+    Map<String, Id> emailToContactId = new Map<String, Id>();
+    if (accountId != null) {
+      Set<String> attendeeEmails = new Set<String>();
+      for (Attendee a : attendees) {
+        if (String.isNotBlank(a.email)) {
+          attendeeEmails.add(a.email.toLowerCase());
+        }
+      }
+      if (!attendeeEmails.isEmpty()) {
+        for (Contact c : [
+          SELECT Id, Email
+          FROM Contact
+          WHERE Email IN :attendeeEmails AND AccountId = :accountId
+          WITH USER_MODE
+        ]) {
+          // First match wins; if duplicates exist on the Account the earliest-inserted wins
+          String key = c.Email.toLowerCase();
+          if (!emailToContactId.containsKey(key)) {
+            emailToContactId.put(key, c.Id);
+          }
+        }
+      }
+    }
+
     // Build group map: "eventName|productType" -> ordered queue of open OLIs
     // OLIs within each group are served in CreatedDate ASC order (from the query above).
     Map<String, List<OpportunityLineItem>> groupMap = new Map<String, List<OpportunityLineItem>>();
@@ -201,6 +237,14 @@ public with sharing class ProcessAppointmentTakerAttendees {
         upd.Attendee_Name__c =
           a.firstName + (String.isNotBlank(a.lastName) ? ' ' + a.lastName : '');
         upd.Attendee_Email__c = a.email;
+
+        // Populate Event Attendee Contact lookup
+        if (String.isNotBlank(a.email)) {
+          Id contactId = emailToContactId.get(a.email.toLowerCase());
+          if (contactId != null) {
+            upd.Event_Attendee_Contact__c = contactId;
+          }
+        }
         toUpdate.add(upd);
       }
     }

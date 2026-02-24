@@ -42,6 +42,21 @@ private class ProcessAppointmentTakerAttendeesTest {
     );
     insert opp;
 
+    // Contacts that match the attendeesJson() helper emails, on the same Account
+    Contact con0 = new Contact(
+      FirstName = 'First0',
+      LastName = 'Last0',
+      Email = 'first0.last0@example.com',
+      AccountId = acc.Id
+    );
+    Contact con1 = new Contact(
+      FirstName = 'First1',
+      LastName = 'Last1',
+      Email = 'first1.last1@example.com',
+      AccountId = acc.Id
+    );
+    insert new List<Contact>{ con0, con1 };
+
     // Two OLI slots: both initially empty (Attendee fields null)
     OpportunityLineItem oli1 = new OpportunityLineItem(
       OpportunityId = opp.Id,
@@ -77,7 +92,12 @@ private class ProcessAppointmentTakerAttendeesTest {
    * @description Queries the test Opportunity created by @TestSetup
    */
   private static Opportunity getTestOpportunity() {
-    return [SELECT Id FROM Opportunity WHERE Name = 'Test Opp' LIMIT 1];
+    return [
+      SELECT Id, AccountId
+      FROM Opportunity
+      WHERE Name = 'Test Opp'
+      LIMIT 1
+    ];
   }
 
   /**
@@ -199,6 +219,7 @@ private class ProcessAppointmentTakerAttendeesTest {
         Attendee_First_Name__c,
         Attendee_Name__c,
         Attendee_Email__c,
+        Event_Attendee_Contact__c,
         CreatedDate,
         Product2.Name
       FROM OpportunityLineItem
@@ -212,6 +233,28 @@ private class ProcessAppointmentTakerAttendeesTest {
     System.assertEquals('First1', olis[1].Attendee_First_Name__c);
     System.assertEquals('First1 Last1', olis[1].Attendee_Name__c);
     System.assertEquals('first1.last1@example.com', olis[1].Attendee_Email__c);
+
+    // Verify Event Attendee lookup populated from matching Contacts
+    List<Contact> testContacts = [
+      SELECT Id, Email
+      FROM Contact
+      WHERE AccountId = :opp.AccountId
+      ORDER BY Email
+    ];
+    Map<String, Id> emailToContact = new Map<String, Id>();
+    for (Contact c : testContacts) {
+      emailToContact.put(c.Email.toLowerCase(), c.Id);
+    }
+    System.assertEquals(
+      emailToContact.get('first0.last0@example.com'),
+      olis[0].Event_Attendee_Contact__c,
+      'OLI 0 Event_Attendee_Contact__c should match Contact with first0.last0@example.com'
+    );
+    System.assertEquals(
+      emailToContact.get('first1.last1@example.com'),
+      olis[1].Event_Attendee_Contact__c,
+      'OLI 1 Event_Attendee_Contact__c should match Contact with first1.last1@example.com'
+    );
   }
 
   @IsTest
