@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <description>Calls your Flex Prompt Template to parse the email body into attendee JSON</description>
+        <description
+    >Calls your Flex Prompt Template to parse the email body into attendee JSON</description>
         <name>Extract_Attendee_Information</name>
         <label>Extract Attendee Information</label>
         <locationX>176</locationX>
@@ -9,7 +10,8 @@
         <actionName>Extract_Attendee_Information</actionName>
         <actionType>generatePromptResponse</actionType>
         <connector>
-            <targetReference>Pass_to_Agent_to_Process_Attendees</targetReference>
+            <targetReference
+      >Pass_to_Agent_to_Process_Attendees</targetReference>
         </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -23,7 +25,8 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <actionCalls>
-        <description>Passes the JSON + RelatedToId (Opportunity) to the Apex invocable class</description>
+        <description
+    >Passes the JSON + RelatedToId (Opportunity) to the Apex invocable class</description>
         <name>Pass_to_Agent_to_Process_Attendees</name>
         <label>Pass to Agent to Process Attendees</label>
         <locationX>176</locationX>
@@ -37,7 +40,8 @@
         <inputParameters>
             <name>jsonString</name>
             <value>
-                <elementReference>Extract_Attendee_Information.promptResponse</elementReference>
+                <elementReference
+        >Extract_Attendee_Information.promptResponse</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -57,6 +61,128 @@
             <name>statusMessage</name>
         </outputParameters>
     </actionCalls>
+    <actionCalls>
+        <description
+    >Sends a success notification email for attendee reply processing.</description>
+        <name>Action_Send_Success_Notification</name>
+        <label>Send Success Notification</label>
+        <locationX>50</locationX>
+        <locationY>647</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <stringValue>mac.kitchin@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <stringValue>attendeeinfo@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue
+        >[Attendee Reply][SUCCESS] {!$Record.Subject}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Flow: Event Registration - Process Attendee Reply
+Result: Success
+OpportunityId: {!$Record.RelatedToId}
+EmailMessageId: {!$Record.Id}
+From: {!$Record.FromAddress}
+Status Message: {!varStatusMessage}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.RelatedToId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <description
+    >Sends a failure notification email for attendee reply processing.</description>
+        <name>Action_Send_Failure_Notification</name>
+        <label>Send Failure Notification</label>
+        <locationX>314</locationX>
+        <locationY>647</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <stringValue>mac.kitchin@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <stringValue>attendeeinfo@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue
+        >[Attendee Reply][FAILED] {!$Record.Subject}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Flow: Event Registration - Process Attendee Reply
+Result: Failed
+OpportunityId: {!$Record.RelatedToId}
+EmailMessageId: {!$Record.Id}
+From: {!$Record.FromAddress}
+Status Message: {!varStatusMessage}</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.RelatedToId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <decisions>
@@ -64,6 +190,9 @@
         <label>Is Success?</label>
         <locationX>176</locationX>
         <locationY>539</locationY>
+        <defaultConnector>
+            <targetReference>Action_Send_Failure_Notification</targetReference>
+        </defaultConnector>
         <defaultConnectorLabel>Failed</defaultConnectorLabel>
         <rules>
             <name>Outcome_Success</name>
@@ -75,12 +204,18 @@
                     <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
+            <connector>
+                <targetReference
+        >Action_Send_Success_Notification</targetReference>
+            </connector>
             <label>Success</label>
         </rules>
     </decisions>
-    <description>Processes incoming email replies to extract attendee information via AI prompt and updates Appointment Taker line items on the related Opportunity.</description>
+    <description
+  >Processes incoming email replies to extract attendee information via AI prompt and updates supported registration line items on the related Opportunity.</description>
     <environments>Default</environments>
-    <interviewLabel>Event Registration - Process Attendee Reply {!$Flow.CurrentDateTime}</interviewLabel>
+    <interviewLabel
+  >Event Registration - Process Attendee Reply {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Event Registration - Process Attendee Reply</label>
     <processMetadataValues>
         <name>BuilderType</name>
@@ -113,14 +248,15 @@
             <field>Subject</field>
             <operator>Contains</operator>
             <value>
-                <stringValue>Action Required: Attendee Details for your Event Registrations</stringValue>
+                <stringValue
+        >Action Required: Attendee Details for your Event Registrations</stringValue>
             </value>
         </filters>
         <object>EmailMessage</object>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
     <variables>
         <name>varIsSuccess</name>
         <dataType>Boolean</dataType>
