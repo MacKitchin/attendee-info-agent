@@ -191,6 +191,20 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
             <value>
+                <stringValue> | Registration Type: </stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Formula_Registration_Type</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
                 <stringValue> | Type: </stringValue>
             </value>
         </assignmentItems>
@@ -358,6 +372,12 @@ Thank you for your purchase! Please reply to this email with the attendee name a
     <interviewLabel
   >Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Appointment Taker - Send Registration Emails</label>
+    <formulas>
+        <name>Formula_Registration_Type</name>
+        <dataType>String</dataType>
+        <expression
+    >IF({!Loop_OLIs.Product2Id} = &quot;01t4X000004U14AQAS&quot;, &quot;Non-Appointment Taker&quot;, &quot;Appointment Taker&quot;)</expression>
+    </formulas>
     <loops>
         <name>Loop_OLIs</name>
         <label>Loop OLIs</label>
