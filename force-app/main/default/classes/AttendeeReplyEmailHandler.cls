@@ -74,7 +74,7 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
         );
         if (tokenMatch == null) {
           result.success = false;
-          result.message = 'Registration token found, but sender does not match the expected recipient.';
+          result.message = 'Registration token found, but sender does not match the expected recipient email or recipient domain.';
           return result;
         }
         opportunityId = tokenOpportunityId;
@@ -266,13 +266,39 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
       return false;
     }
     String target = normalizeEmail(targetEmail);
+    if (String.isBlank(target)) {
+      return false;
+    }
+    String targetDomain = extractEmailDomain(target);
     String normalizedList = addressList.replace(',', ';');
     for (String token : normalizedList.split(';')) {
-      if (target == normalizeEmail(token)) {
+      String candidate = normalizeEmail(token);
+      if (String.isBlank(candidate)) {
+        continue;
+      }
+      // Allow strict email match, or same domain as the original recipient.
+      if (
+        target == candidate ||
+        (!String.isBlank(targetDomain) &&
+        targetDomain == extractEmailDomain(candidate))
+      ) {
         return true;
       }
     }
     return false;
+  }
+
+  @TestVisible
+  private static String extractEmailDomain(String rawEmail) {
+    String value = normalizeEmail(rawEmail);
+    if (String.isBlank(value)) {
+      return null;
+    }
+    Integer at = value.lastIndexOf('@');
+    if (at <= 0 || at >= value.length() - 1) {
+      return null;
+    }
+    return value.substring(at + 1);
   }
 
   private static String normalizeEmail(String raw) {

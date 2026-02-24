@@ -190,12 +190,12 @@ private class AttendeeReplyEmailHandlerTest {
   static void testNoMatchingOutgoingEmail_failure() {
     Messaging.InboundEmail email = new Messaging.InboundEmail();
     email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
-    email.fromAddress = 'unknown@example.com';
+    email.fromAddress = 'unknown@externaldomain.com';
     email.toAddresses = new List<String>{ 'production@connectmeetings.com' };
     email.plainTextBody = 'Attendees: Jane Doe - jane@example.com';
 
     Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
-    envelope.fromAddress = 'unknown@example.com';
+    envelope.fromAddress = 'unknown@externaldomain.com';
 
     AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
 
@@ -504,8 +504,59 @@ private class AttendeeReplyEmailHandlerTest {
   }
 
   /**
+   * @description If a token is present and the sender shares the same domain as
+   * the original recipient, allow routing to the tokenized opportunity thread.
+   */
+  @IsTest
+  static void testTokenRouting_sameDomainSender_allowed() {
+    Opportunity opp = createOpportunity('Token Same Domain Opp');
+    String tokenSubject =
+      AttendeeReplyEmailHandler.SUBJECT_PATTERN +
+      ' [REG:' +
+      opp.Id +
+      ']';
+    EmailMessage outgoing = createOutgoing(
+      opp.Id,
+      tokenSubject,
+      'signer@example.com'
+    );
+
+    Messaging.InboundEmail email = new Messaging.InboundEmail();
+    email.subject = 'Re: ' + tokenSubject;
+    email.fromAddress = 'teammate@example.com';
+    email.fromName = 'Teammate Sender';
+    email.toAddresses = new List<String>{ 'production@connectmeetings.com' };
+    email.plainTextBody = 'Attendees: Team Mate - teammate@example.com';
+
+    Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+    envelope.fromAddress = 'teammate@example.com';
+
+    Test.startTest();
+    Messaging.InboundEmailResult result = new AttendeeReplyEmailHandler()
+      .handleInboundEmail(email, envelope);
+    Test.stopTest();
+
+    System.assertEquals(
+      true,
+      result.success,
+      'Token + same domain should be accepted'
+    );
+
+    EmailMessage created = [
+      SELECT RelatedToId, ReplyToEmailMessageId
+      FROM EmailMessage
+      WHERE Incoming = TRUE
+      ORDER BY CreatedDate DESC
+      LIMIT 1
+    ];
+    System.assertEquals(opp.Id, created.RelatedToId);
+    System.assertEquals(outgoing.Id, created.ReplyToEmailMessageId);
+  }
+
+  /**
    * @description If a token is present but the sender does not match the original
-   * recipient for that tokenized thread, reject the message instead of misrouting.
+   * recipient email or domain for that tokenized thread, reject the message
+   * instead of misrouting.
    */
   @IsTest
   static void testTokenRouting_senderMismatch_rejected() {
@@ -519,13 +570,13 @@ private class AttendeeReplyEmailHandlerTest {
 
     Messaging.InboundEmail email = new Messaging.InboundEmail();
     email.subject = 'Re: ' + tokenSubject;
-    email.fromAddress = 'different.person@example.com';
+    email.fromAddress = 'different.person@anotherdomain.com';
     email.fromName = 'Different Sender';
     email.toAddresses = new List<String>{ 'production@connectmeetings.com' };
     email.plainTextBody = 'Attendees: Someone Else - someone@example.com';
 
     Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
-    envelope.fromAddress = 'different.person@example.com';
+    envelope.fromAddress = 'different.person@anotherdomain.com';
 
     Test.startTest();
     Messaging.InboundEmailResult result = new AttendeeReplyEmailHandler()
