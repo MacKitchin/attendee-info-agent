@@ -78,6 +78,18 @@
             </value>
         </inputParameters>
         <inputParameters>
+            <name>senderType</name>
+            <value>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <stringValue>attendeeinfo@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
             <name>emailSubject</name>
             <value>
                 <stringValue
@@ -101,6 +113,12 @@ Status Message: {!varStatusMessage}</stringValue>
                 <elementReference>$Record.RelatedToId</elementReference>
             </value>
         </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
         <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
     </actionCalls>
@@ -118,6 +136,18 @@ Status Message: {!varStatusMessage}</stringValue>
             <name>emailAddresses</name>
             <value>
                 <stringValue>mac.kitchin@informa.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+            <value>
+                <stringValue>OrgWideEmailAddress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <stringValue>attendeeinfo@informa.com</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -142,6 +172,12 @@ Status Message: {!varStatusMessage}</stringValue>
             <name>relatedRecordId</name>
             <value>
                 <elementReference>$Record.RelatedToId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
             </value>
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
