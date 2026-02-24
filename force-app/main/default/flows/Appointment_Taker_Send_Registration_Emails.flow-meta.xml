@@ -183,22 +183,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
             <value>
-                <stringValue>. Registration Type: </stringValue>
-            </value>
-        </assignmentItems>
-        <assignmentItems>
-            <assignToReference>varEmailBody</assignToReference>
-            <operator>Add</operator>
-            <value>
-                <elementReference>Formula_Registration_Type</elementReference>
-            </value>
-        </assignmentItems>
-        <assignmentItems>
-            <assignToReference>varEmailBody</assignToReference>
-            <operator>Add</operator>
-            <value>
-                <stringValue>
-   Event Name: </stringValue>
+                <stringValue>. Event: </stringValue>
             </value>
         </assignmentItems>
         <assignmentItems>
@@ -212,8 +197,21 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <assignToReference>varEmailBody</assignToReference>
             <operator>Add</operator>
             <value>
-                <stringValue>
-   Market/Track: </stringValue>
+                <stringValue> | Registration Type: </stringValue>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <elementReference>Formula_Registration_Type</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>varEmailBody</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <stringValue> | Type: </stringValue>
             </value>
         </assignmentItems>
         <assignmentItems>
@@ -228,8 +226,8 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <operator>Add</operator>
             <value>
                 <stringValue>
-   Attendee Name: 
-   Attendee Email: 
+Attendee Name: 
+Attendee Email: 
 
 </stringValue>
             </value>
@@ -280,9 +278,7 @@ Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | L
             <value>
                 <stringValue>,
 
-Thank you for your recent purchase! To complete your event registrations, we need the name and email address for each attendee listed below.
-
-Simply fill in the details and reply to this email — or just list them in your own words. We&apos;ll take care of the rest.
+Thank you for your purchase! Please reply to this email with the attendee name and email address for each registration listed below.
 
 </stringValue>
             </value>
