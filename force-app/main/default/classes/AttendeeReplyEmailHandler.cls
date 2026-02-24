@@ -15,6 +15,15 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
   private static final Pattern REG_TOKEN_PATTERN = Pattern.compile(
     '(?i)\\[REG:([a-zA-Z0-9]{15,18})\\]'
   );
+  @TestVisible
+  private static final String OUTLOOK_REPLY_SEPARATOR = '________________________________';
+  private static final Pattern SEE_BELOW_PATTERN = Pattern.compile(
+    '(?i)\\b(please\\s+see\\s+below|see\\s+below|details\\s+below|filled\\s+below|completed\\s+below|populated\\s+below)\\b'
+  );
+  private static final Pattern EMAIL_PATTERN = Pattern.compile(
+    '(?i)\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}\\b'
+  );
+  private static final Integer MAX_PROMPT_BODY_CHARS = 28000;
   private static final Integer LEGACY_LOOKBACK_DAYS = 60;
 
   /**
@@ -47,28 +56,11 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
         return result;
       }
 
-      // Strip quoted reply content from the plain text body.
-      // Outlook/Exchange appends the original message after a line of underscores.
-      // We keep only the top portion (the actual reply) to avoid passing
-      // oversized payloads to the Einstein prompt template.
-      String plainBody = email.plainTextBody != null ? email.plainTextBody : '';
-      Integer separatorIdx = plainBody.indexOf(
-        '________________________________'
-      );
-      if (separatorIdx > 0) {
-        plainBody = plainBody.substring(0, separatorIdx).trim();
-      }
-
-      // Decode HTML entities that Outlook injects into the plain text body.
-      // These cause UndefinedResolutionError in the Einstein prompt template engine.
-      plainBody = plainBody
-        .replace('&amp;', '&')
-        .replace('&lt;', '<')
-        .replace('&gt;', '>')
-        .replace('&quot;', '"')
-        .replace('&#39;', '\'')
-        .replace('&#124;', '|')
-        .replace('&nbsp;', ' ');
+      // Build a prompt-safe body:
+      // - keep top reply when it contains attendee data
+      // - if the signer says "see below", keep quoted/original content instead
+      // - decode Outlook entities and cap body length for prompt stability
+      String plainBody = preparePromptBody(email.plainTextBody);
 
       Id opportunityId;
       Id replyToEmailMessageId;
@@ -104,7 +96,7 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
       // This insert triggers Flow B (Event Registration - Process Attendee Reply).
       EmailMessage em = new EmailMessage();
       em.Subject = subject;
-      em.TextBody = plainBody; // stripped reply content only
+      em.TextBody = plainBody; // prompt-safe body prepared from the inbound reply
       em.HtmlBody = null; // omit HTML; prompt template uses TextBody only
       em.FromAddress = fromAddr;
       em.FromName = email.fromName;
@@ -126,6 +118,79 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     }
 
     return result;
+  }
+
+  @TestVisible
+  private static String preparePromptBody(String rawBody) {
+    String body = rawBody != null ? rawBody.trim() : '';
+    if (String.isBlank(body)) {
+      return '';
+    }
+
+    Integer separatorIdx = body.indexOf(OUTLOOK_REPLY_SEPARATOR);
+    if (separatorIdx > 0) {
+      String topReply = body.substring(0, separatorIdx).trim();
+      String quotedReply = body
+        .substring(separatorIdx + OUTLOOK_REPLY_SEPARATOR.length())
+        .trim();
+
+      // Preserve current behavior for normal replies, but recover attendee data
+      // entered inside the quoted/original section (common "please see below").
+      if (shouldKeepTopReplyOnly(topReply)) {
+        body = topReply;
+      } else if (hasAttendeeSignals(quotedReply)) {
+        body = quotedReply;
+      } else {
+        body = topReply;
+      }
+    }
+
+    body = decodeHtmlEntities(body);
+    if (body.length() > MAX_PROMPT_BODY_CHARS) {
+      body = body.substring(0, MAX_PROMPT_BODY_CHARS).trim();
+    }
+    return body;
+  }
+
+  @TestVisible
+  private static Boolean shouldKeepTopReplyOnly(String topReply) {
+    if (String.isBlank(topReply)) {
+      return false;
+    }
+    if (SEE_BELOW_PATTERN.matcher(topReply).find()) {
+      return false;
+    }
+    return hasAttendeeSignals(topReply);
+  }
+
+  private static Boolean hasAttendeeSignals(String bodyText) {
+    if (String.isBlank(bodyText)) {
+      return false;
+    }
+    String lower = bodyText.toLowerCase();
+    if (
+      lower.contains('attendee name:') ||
+      lower.contains('attendee email:') ||
+      lower.contains('event:') ||
+      lower.contains('registration')
+    ) {
+      return true;
+    }
+    return EMAIL_PATTERN.matcher(bodyText).find();
+  }
+
+  private static String decodeHtmlEntities(String bodyText) {
+    if (String.isBlank(bodyText)) {
+      return '';
+    }
+    return bodyText
+      .replace('&amp;', '&')
+      .replace('&lt;', '<')
+      .replace('&gt;', '>')
+      .replace('&quot;', '"')
+      .replace('&#39;', '\'')
+      .replace('&#124;', '|')
+      .replace('&nbsp;', ' ');
   }
 
   private static EmailMessage findOutgoingByTokenAndSender(

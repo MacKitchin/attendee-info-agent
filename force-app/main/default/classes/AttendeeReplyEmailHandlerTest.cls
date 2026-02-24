@@ -277,6 +277,61 @@ private class AttendeeReplyEmailHandlerTest {
   }
 
   /**
+   * @description If the signer replies with "see below" and fills attendee details
+   * inside the quoted/original content, that content should be retained for parsing.
+   */
+  @IsTest
+  static void testSeeBelowReply_quotedBodyRetainedWhenTopHasNoAttendeeData() {
+    Messaging.InboundEmail email = new Messaging.InboundEmail();
+    email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
+    email.fromAddress = 'signer@example.com';
+    email.fromName = 'Test Signer';
+    email.toAddresses = new List<String>{ 'attendeeinfo@informa.com' };
+    email.plainTextBody =
+      'Please see below.\n\n' +
+      '________________________________\n' +
+      '-----Original Message-----\n' +
+      'From: Attendee Information <attendeeinfo@informa.com>\n' +
+      'Subject: Action Required: Attendee Details for your Event Registrations\n\n' +
+      '1. Event: Spring Marketplace | Type: Association\n' +
+      'Attendee Name: Nikki Gustafson\n' +
+      'Attendee Email: nikki@visitstcloud.com\n';
+
+    Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+    envelope.fromAddress = 'signer@example.com';
+
+    AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
+
+    Test.startTest();
+    Messaging.InboundEmailResult result = handler.handleInboundEmail(
+      email,
+      envelope
+    );
+    Test.stopTest();
+
+    System.assertEquals(true, result.success, 'Handler should succeed');
+
+    EmailMessage created = [
+      SELECT TextBody
+      FROM EmailMessage
+      WHERE Incoming = TRUE
+      LIMIT 1
+    ];
+    System.assert(
+      !created.TextBody.startsWith('Please see below.'),
+      'Prompt body should prefer quoted content when top reply is deferral text'
+    );
+    System.assert(
+      created.TextBody.contains('Attendee Name: Nikki Gustafson'),
+      'Quoted attendee name should be retained'
+    );
+    System.assert(
+      created.TextBody.contains('Attendee Email: nikki@visitstcloud.com'),
+      'Quoted attendee email should be retained'
+    );
+  }
+
+  /**
    * @description HTML entities from Outlook (e.g. &amp; &lt; &#124;) should be decoded
    * in the stored TextBody so the Einstein prompt template can process it.
    */
