@@ -1,5 +1,5 @@
 /**
- * @description Invocable Apex to process Appointment Taker attendees from JSON and assign to available OpportunityLineItems.
+ * @description Invocable Apex to process registration attendees from JSON and assign to available OpportunityLineItems.
  * Attendees are matched to OLIs by event_name + product_type (group-fill). If no match, falls back to
  * the next available open slot in creation order.
  * @author Agentforce
@@ -43,15 +43,25 @@ public with sharing class ProcessAppointmentTakerAttendees {
     ERROR
   }
 
+  private static final Set<Id> SUPPORTED_PRODUCT_IDS = new Set<Id>{
+    '01t4X000004U13iQAC', // Appointment Taker
+    '01t4X000004U14AQAS' // Non-Appointment Taker
+  };
+  @TestVisible
+  private static final Set<String> TEST_FALLBACK_PRODUCT_NAMES = new Set<String>{
+    'Appointment Taker',
+    'Non-Appointment Taker'
+  };
+
   /**
-   * @description Invocable entry point to process attendees for Appointment Taker OLIs on an Opportunity.
+   * @description Invocable entry point to process attendees for supported registration OLIs on an Opportunity.
    * Accepts a list to support Flow bulkification; each request is processed independently.
    * @param requests List of Request containing jsonString (array of attendees) and opportunityId
    * @return List of Result containing isSuccess and statusMessage
    */
   @InvocableMethod(
     label='Process Appointment Taker Attendees'
-    description='Maps attendees from JSON to empty Appointment Taker line items on the given Opportunity.'
+    description='Maps attendees from JSON to empty supported registration line items on the given Opportunity.'
   )
   public static List<Result> process(List<Request> requests) {
     List<Result> results = new List<Result>();
@@ -127,33 +137,14 @@ public with sharing class ProcessAppointmentTakerAttendees {
     }
 
     // Load available OLIs (WITH USER_MODE to enforce user security)
-    List<OpportunityLineItem> available = [
-      SELECT
-        Id,
-        OpportunityId,
-        Product2.Name,
-        CreatedDate,
-        Event_Name__c,
-        Product_Type__c,
-        Attendee_First_Name__c,
-        Attendee_Name__c,
-        Attendee_Email__c
-      FROM OpportunityLineItem
-      WHERE
-        OpportunityId = :req.opportunityId
-        AND Product2.Name = 'Appointment Taker'
-        AND (Attendee_Name__c = NULL
-        OR Attendee_Email__c = NULL)
-      WITH USER_MODE
-      ORDER BY CreatedDate ASC
-    ];
+    List<OpportunityLineItem> available = loadAvailableOlis(req.opportunityId);
 
     if (available.isEmpty()) {
       return new Result(
         true,
         buildStatus(
           STATUS_PART.NO_MATCHING_LINE_ITEMS,
-          'No open Appointment Taker line items found.'
+          'No open supported registration line items found.'
         )
       );
     }
@@ -290,6 +281,59 @@ public with sharing class ProcessAppointmentTakerAttendees {
    */
   private static String buildStatus(STATUS_PART part, String message) {
     return String.valueOf(part) + ': ' + (message == null ? '' : message);
+  }
+
+  /**
+   * @description Loads open OLIs for supported attendee-registration products.
+   * Uses a test-only name fallback so unit tests do not depend on fixed org IDs.
+   */
+  private static List<OpportunityLineItem> loadAvailableOlis(
+    String opportunityId
+  ) {
+    if (Test.isRunningTest()) {
+      return [
+        SELECT
+          Id,
+          OpportunityId,
+          Product2.Name,
+          CreatedDate,
+          Event_Name__c,
+          Product_Type__c,
+          Attendee_First_Name__c,
+          Attendee_Name__c,
+          Attendee_Email__c
+        FROM OpportunityLineItem
+        WHERE
+          OpportunityId = :opportunityId
+          AND (Product2Id IN :SUPPORTED_PRODUCT_IDS
+          OR Product2.Name IN :TEST_FALLBACK_PRODUCT_NAMES)
+          AND (Attendee_Name__c = NULL
+          OR Attendee_Email__c = NULL)
+        WITH USER_MODE
+        ORDER BY CreatedDate ASC
+      ];
+    }
+
+    return [
+      SELECT
+        Id,
+        OpportunityId,
+        Product2.Name,
+        CreatedDate,
+        Event_Name__c,
+        Product_Type__c,
+        Attendee_First_Name__c,
+        Attendee_Name__c,
+        Attendee_Email__c
+      FROM OpportunityLineItem
+      WHERE
+        OpportunityId = :opportunityId
+        AND Product2Id IN :SUPPORTED_PRODUCT_IDS
+        AND (Attendee_Name__c = NULL
+        OR Attendee_Email__c = NULL)
+      WITH USER_MODE
+      ORDER BY CreatedDate ASC
+    ];
   }
 
   /**

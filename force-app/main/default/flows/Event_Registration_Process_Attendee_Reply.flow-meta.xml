@@ -212,7 +212,7 @@ Status Message: {!varStatusMessage}</stringValue>
         </rules>
     </decisions>
     <description
-  >Processes incoming email replies to extract attendee information via AI prompt and updates Appointment Taker line items on the related Opportunity.</description>
+  >Processes incoming email replies to extract attendee information via AI prompt and updates supported registration line items on the related Opportunity.</description>
     <environments>Default</environments>
     <interviewLabel
   >Event Registration - Process Attendee Reply {!$Flow.CurrentDateTime}</interviewLabel>

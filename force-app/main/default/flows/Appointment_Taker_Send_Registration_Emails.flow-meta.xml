@@ -40,7 +40,7 @@
             <value>
                 <inputConfiguratorMode>Custom</inputConfiguratorMode>
                 <stringValue
-        >&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you! All appointment taker registrations have been assigned to your attendees.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Best,&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;img src=&quot;//:0&quot;&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(0, 34, 68); font-size: 10.5pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(94, 83, 215); font-size: 12px;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
+        >&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you! All event registrations have been assigned to your attendees.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Best,&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;img src=&quot;//:0&quot;&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(0, 34, 68); font-size: 10.5pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(94, 83, 215); font-size: 12px;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
@@ -353,7 +353,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         </rules>
     </decisions>
     <description
-  >Sends registration emails when Opportunity moves to Closed Won with Appointment Taker products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
+  >Sends registration emails when Opportunity moves to Closed Won with supported attendee-registration products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
     <environments>Default</environments>
     <interviewLabel
   >Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
@@ -395,7 +395,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <connector>
             <targetReference>Assign_Init_Email_Body</targetReference>
         </connector>
-        <filterLogic>and</filterLogic>
+        <filterLogic>1 AND (2 OR 3)</filterLogic>
         <filters>
             <field>OpportunityId</field>
             <operator>EqualTo</operator>
@@ -408,6 +408,13 @@ Thank you for your purchase! Please reply to this email with the attendee name a
             <operator>EqualTo</operator>
             <value>
                 <stringValue>01t4X000004U13iQAC</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Product2Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>01t4X000004U14AQAS</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>false</getFirstRecordOnly>
