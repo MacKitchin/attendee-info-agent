@@ -7,9 +7,12 @@ An **Agentforce-driven agent** that automates attendee registration for Connect 
 1. **Opportunity closes won** with supported attendee-registration products:
    - Appointment Taker (`01t4X000004U13iQAC`)
    - Non-Appointment Taker (`01t4X000004U14AQAS`)
+   - Marketer (`01t4X000004U148QAC`)
 2. **Flow A** checks for OLIs with missing attendee info and sends a follow-up email to the Signer Contact
 3. **Signer replies** with attendee names and emails
 4. **Flow B** (triggered by incoming EmailMessage) uses a GenAI prompt to extract attendee data and invokes Apex to assign it to open OLI slots
+5. **Apex** populates `Event_Attendee_Contact__c` lookup by matching attendee email to existing Contacts on the Opportunity's Account
+6. **Notification emails** sent to `mac.kitchin@informa.com` on success or failure with Account, Opportunity, and Contact details
 
 ## Project Structure
 
@@ -31,16 +34,17 @@ force-app/main/default/
 
 - **Inputs:** `jsonString` (JSON array of attendees), `opportunityId`
 - **JSON format:** `[{"first_name":"Jane","last_name":"Doe","email":"jane@example.com","event_name":"BizBash MEGA","product_type":"Association"}, ...]` (`event_name` and `product_type` are optional)
-- Assigns attendees to open supported registration OLIs (Appointment Taker and Non-Appointment Taker)
+- Assigns attendees to open supported registration OLIs (Appointment Taker, Non-Appointment Taker, and Marketer)
 - Matching behavior:
   - First tries event-aware matching by `event_name + product_type`
   - Falls back to next available slot by `CreatedDate` order
+- Populates `Event_Attendee_Contact__c` lookup field by matching attendee email to Contacts on the Opportunity's Account
 - Returns `isSuccess` and `statusMessage` with status codes: `SUCCESS_ASSIGNED`, `PARTIAL_ASSIGNED`, `NO_MATCHING_LINE_ITEMS`, `INVALID_JSON`, etc.
 
 ### Flows
 
-- **Appointment Taker Send Registration Emails:** Record-triggered on Opportunity (After Update). Fires when `StageName = 'Closed Won'`, checks supported Product2 IDs, and sends either confirmation or follow-up email based on OLI attendee status. Each requested line in the follow-up email includes Event, Registration Type (`Appointment Taker` or `Non-Appointment Taker`), and Type.
-- **Event Registration Process Attendee Reply:** Record-triggered on EmailMessage (After Create). Fires on incoming replies matching the registration subject, extracts attendee info via GenAI, and calls the invocable Apex to update supported registration OLIs.
+- **Appointment Taker Send Registration Emails:** Record-triggered on Opportunity (After Update). Fires when `StageName = 'Closed Won'`, checks supported Product2 IDs (Appointment Taker, Non-Appointment Taker, Marketer), and sends either confirmation or follow-up email based on OLI attendee status. Each requested line in the follow-up email includes Event, Registration Type, and Type.
+- **Event Registration Process Attendee Reply:** Record-triggered on EmailMessage (After Create). Fires on incoming replies matching the registration subject, queries Opportunity details, extracts attendee info via GenAI, calls the invocable Apex to update supported registration OLIs, and sends success/failure notification emails to `mac.kitchin@informa.com` with Account, Opportunity, and Contact details. Includes fault handling for GenAI prompt and Apex errors.
 
 ### Extract Attendee Information (Prompt Template)
 
@@ -50,7 +54,7 @@ Flex template that parses email subject and body to produce a raw JSON array of 
 
 - [Salesforce CLI](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm) (`sf`)
 - Node.js (for LWC Jest tests if applicable)
-- A Salesforce org with the required custom fields on Opportunity and OpportunityLineItem (e.g. `Signer_Contact__c`, `Attendee_Name__c`, `Attendee_Email__c`, `Attendee_First_Name__c`)
+- A Salesforce org with the required custom fields on Opportunity and OpportunityLineItem (e.g. `Signer_Contact__c`, `Attendee_Name__c`, `Attendee_Email__c`, `Attendee_First_Name__c`, `Event_Attendee_Contact__c`, `Event_Name__c`, `Product_Type__c`)
 
 ## Setup & Deployment
 
