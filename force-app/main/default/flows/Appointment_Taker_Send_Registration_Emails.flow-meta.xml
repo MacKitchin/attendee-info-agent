@@ -379,7 +379,8 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <name>Formula_Registration_Type</name>
         <dataType>String</dataType>
         <expression
-    >IF({!Loop_OLIs.Product2Id} = &quot;01t4X000004U14AQAS&quot;, &quot;Non-Appointment Taker&quot;, &quot;Appointment Taker&quot;)</expression>
+    >IF({!Loop_OLIs.Product2Id} = &quot;01t4X000004U14AQAS&quot;, &quot;Non-Appointment Taker&quot;, 
+IF({!Loop_OLIs.Product2Id} = &quot;01t4X000004U148QAC&quot;, &quot;Marketer&quot;, &quot;Appointment Taker&quot;))</expression>
     </formulas>
     <interviewLabel
   >Appointment Taker - Send Registration Emails {!$Flow.CurrentDateTime}</interviewLabel>
@@ -421,7 +422,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <connector>
             <targetReference>Assign_Init_Email_Body</targetReference>
         </connector>
-        <filterLogic>1 AND (2 OR 3)</filterLogic>
+        <filterLogic>1 AND (2 OR 3 OR 4)</filterLogic>
         <filters>
             <field>OpportunityId</field>
             <operator>EqualTo</operator>
@@ -441,6 +442,13 @@ Thank you for your purchase! Please reply to this email with the attendee name a
             <operator>EqualTo</operator>
             <value>
                 <stringValue>01t4X000004U14AQAS</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Product2Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>01t4X000004U148QAC</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>false</getFirstRecordOnly>

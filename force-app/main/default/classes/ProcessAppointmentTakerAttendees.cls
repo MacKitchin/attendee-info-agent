@@ -46,12 +46,14 @@ public with sharing class ProcessAppointmentTakerAttendees {
 
   private static final Set<Id> SUPPORTED_PRODUCT_IDS = new Set<Id>{
     '01t4X000004U13iQAC', // Appointment Taker
-    '01t4X000004U14AQAS' // Non-Appointment Taker
+    '01t4X000004U14AQAS', // Non-Appointment Taker
+    '01t4X000004U148QAC' // Marketer
   };
   @TestVisible
   private static final Set<String> TEST_FALLBACK_PRODUCT_NAMES = new Set<String>{
     'Appointment Taker',
-    'Non-Appointment Taker'
+    'Non-Appointment Taker',
+    'Marketer'
   };
 
   /**
