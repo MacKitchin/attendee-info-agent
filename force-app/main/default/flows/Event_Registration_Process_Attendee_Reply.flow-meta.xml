@@ -40,9 +40,14 @@
             <value>
                 <stringValue>Flow: Event Registration - Process Attendee Reply
 Result: Failed
+
+Account: {!Get_Opportunity_Details.Account.Name}
+Opportunity: {!Get_Opportunity_Details.Name}
 OpportunityId: {!$Record.RelatedToId}
+Contact: {!$Record.FromName}
+Contact Email: {!$Record.FromAddress}
+
 EmailMessageId: {!$Record.Id}
-From: {!$Record.FromAddress}
 Status Message: {!varStatusMessage}</stringValue>
             </value>
         </inputParameters>
@@ -101,9 +106,14 @@ Status Message: {!varStatusMessage}</stringValue>
             <value>
                 <stringValue>Flow: Event Registration - Process Attendee Reply
 Result: Success
+
+Account: {!Get_Opportunity_Details.Account.Name}
+Opportunity: {!Get_Opportunity_Details.Name}
 OpportunityId: {!$Record.RelatedToId}
+Contact: {!$Record.FromName}
+Contact Email: {!$Record.FromAddress}
+
 EmailMessageId: {!$Record.Id}
-From: {!$Record.FromAddress}
 Status Message: {!varStatusMessage}</stringValue>
             </value>
         </inputParameters>
@@ -252,11 +262,33 @@ Status Message: {!varStatusMessage}</stringValue>
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Opportunity_Details</name>
+        <label>Get Opportunity Details</label>
+        <locationX>176</locationX>
+        <locationY>215</locationY>
+        <assignNullValuesIfNoRecordsFound
+    >false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Extract_Attendee_Information</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.RelatedToId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Opportunity</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <start>
         <locationX>50</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Extract_Attendee_Information</targetReference>
+            <targetReference>Get_Opportunity_Details</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
