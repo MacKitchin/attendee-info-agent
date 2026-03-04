@@ -1,0 +1,5 @@
+<aura:component description="canvasly"
+implements="force:lightningQuickAction,force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global">
+<force:canvasApp developerName="AffectLayer_Notes" namespacePrefix="affectlayer"
+width="99%" scrolling="false" />
+</aura:component>
