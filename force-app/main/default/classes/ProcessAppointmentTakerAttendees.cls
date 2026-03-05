@@ -353,8 +353,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
           OpportunityId = :opportunityId
           AND (Product2Id IN :SUPPORTED_PRODUCT_IDS
           OR Product2.Name IN :TEST_FALLBACK_PRODUCT_NAMES)
-          AND (Attendee_Name__c = NULL
-          OR Attendee_Email__c = NULL)
+          AND Attendee_Name__c = NULL
+          AND Attendee_Email__c = NULL
         WITH USER_MODE
         ORDER BY CreatedDate ASC
       ];
@@ -375,8 +375,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
       WHERE
         OpportunityId = :opportunityId
         AND Product2Id IN :SUPPORTED_PRODUCT_IDS
-        AND (Attendee_Name__c = NULL
-        OR Attendee_Email__c = NULL)
+        AND Attendee_Name__c = NULL
+        AND Attendee_Email__c = NULL
       WITH USER_MODE
       ORDER BY CreatedDate ASC
     ];

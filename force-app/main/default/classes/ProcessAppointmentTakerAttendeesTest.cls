@@ -417,6 +417,69 @@ private class ProcessAppointmentTakerAttendeesTest {
   }
 
   @IsTest
+  static void testPartiallyFilledLineItem_notTreatedAsOpen() {
+    Id stdPbId = getStandardPricebookId();
+    PricebookEntry pbe = getTestPricebookEntry();
+
+    Account acc = new Account(Name = 'Partial Slot Co');
+    insert acc;
+
+    Opportunity opp = new Opportunity(
+      Name = 'Opp Partial Slot',
+      StageName = 'Prospecting',
+      CloseDate = System.today().addDays(5),
+      AccountId = acc.Id,
+      Pricebook2Id = stdPbId,
+      RecordTypeId = '01230000000bVYmAAM',
+      Sales_Territory__c = 'North'
+    );
+    insert opp;
+
+    OpportunityLineItem oli = new OpportunityLineItem(
+      OpportunityId = opp.Id,
+      PricebookEntryId = pbe.Id,
+      Quantity = 1,
+      TotalPrice = 10,
+      Organization__c = 'BizBash',
+      Product_Year__c = '2026',
+      Product_Category__c = 'Event',
+      Product_Type__c = 'Association',
+      Event_Name__c = 'BizBash MEGA',
+      Attendee_Name__c = 'Existing Name'
+    );
+    insert oli;
+
+    ProcessAppointmentTakerAttendees.Request r = new ProcessAppointmentTakerAttendees.Request();
+    r.opportunityId = opp.Id;
+    r.jsonString = attendeesJson(1);
+
+    Test.startTest();
+    List<ProcessAppointmentTakerAttendees.Result> res = ProcessAppointmentTakerAttendees.process(
+      new List<ProcessAppointmentTakerAttendees.Request>{ r }
+    );
+    Test.stopTest();
+
+    System.assertEquals(1, res.size());
+    System.assertEquals(
+      true,
+      res[0].isSuccess,
+      'Partially filled slots should not be treated as open'
+    );
+    System.assert(
+      res[0].statusMessage.contains('NO_MATCHING_LINE_ITEMS'),
+      'Expected partially filled slot to be excluded from assignment'
+    );
+
+    OpportunityLineItem unchanged = [
+      SELECT Attendee_Name__c, Attendee_Email__c
+      FROM OpportunityLineItem
+      WHERE Id = :oli.Id
+    ];
+    System.assertEquals('Existing Name', unchanged.Attendee_Name__c);
+    System.assertEquals(null, unchanged.Attendee_Email__c);
+  }
+
+  @IsTest
   static void testEmptyJsonArray_noAttendeesProvided() {
     Opportunity opp = getTestOpportunity();
 
