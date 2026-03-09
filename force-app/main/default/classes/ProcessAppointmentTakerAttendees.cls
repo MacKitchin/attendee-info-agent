@@ -17,6 +17,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
     public String jsonString;
     @InvocableVariable(required=true)
     public String opportunityId;
+    @InvocableVariable
+    public Id processingLogId;
   }
 
   /**
@@ -27,10 +29,57 @@ public with sharing class ProcessAppointmentTakerAttendees {
     public Boolean isSuccess;
     @InvocableVariable
     public String statusMessage;
+    @InvocableVariable
+    public Integer attendeesProvided;
+    @InvocableVariable
+    public Integer attendeesAssigned;
+    @InvocableVariable
+    public Integer attendeesNotAssigned;
+    @InvocableVariable
+    public Integer openSlotsRemaining;
+    @InvocableVariable
+    public String finalStatus;
+    @InvocableVariable
+    public String errorCategory;
 
     public Result(Boolean isSuccess, String statusMessage) {
+      this(isSuccess, statusMessage, null, null, null, null, null, null);
+    }
+
+    public Result(
+      Boolean isSuccess,
+      String statusMessage,
+      Integer attendeesProvided,
+      Integer attendeesAssigned,
+      Integer attendeesNotAssigned,
+      Integer openSlotsRemaining,
+      String finalStatus,
+      String errorCategory
+    ) {
       this.isSuccess = isSuccess;
       this.statusMessage = statusMessage;
+      this.attendeesProvided = attendeesProvided;
+      this.attendeesAssigned = attendeesAssigned;
+      this.attendeesNotAssigned = attendeesNotAssigned;
+      this.openSlotsRemaining = openSlotsRemaining;
+      this.finalStatus = finalStatus;
+      this.errorCategory = errorCategory;
+    }
+  }
+
+  private class AssignmentAttempt {
+    Attendee attendee;
+    OpportunityLineItem target;
+    Id assignedContactId;
+
+    AssignmentAttempt(
+      Attendee attendee,
+      OpportunityLineItem target,
+      Id assignedContactId
+    ) {
+      this.attendee = attendee;
+      this.target = target;
+      this.assignedContactId = assignedContactId;
     }
   }
 
@@ -106,7 +155,13 @@ public with sharing class ProcessAppointmentTakerAttendees {
       // Treat missing attendees as a no-op success
       return new Result(
         true,
-        buildStatus(STATUS_PART.NO_ATTENDEES_PROVIDED, 'Empty jsonString.')
+        buildStatus(STATUS_PART.NO_ATTENDEES_PROVIDED, 'Empty jsonString.'),
+        0,
+        0,
+        0,
+        0,
+        'Failed',
+        'AI Extraction'
       );
     }
 
@@ -117,7 +172,13 @@ public with sharing class ProcessAppointmentTakerAttendees {
     } catch (ProcessException pe) {
       return new Result(
         false,
-        buildStatus(STATUS_PART.INVALID_JSON, pe.getMessage())
+        buildStatus(STATUS_PART.INVALID_JSON, pe.getMessage()),
+        0,
+        0,
+        0,
+        0,
+        'Failed',
+        'JSON Parse'
       );
     } catch (Exception e) {
       return new Result(
@@ -125,7 +186,13 @@ public with sharing class ProcessAppointmentTakerAttendees {
         buildStatus(
           STATUS_PART.INVALID_JSON,
           'Unexpected error parsing JSON: ' + e.getMessage()
-        )
+        ),
+        0,
+        0,
+        0,
+        0,
+        'Failed',
+        'JSON Parse'
       );
     }
 
@@ -135,7 +202,13 @@ public with sharing class ProcessAppointmentTakerAttendees {
         buildStatus(
           STATUS_PART.NO_ATTENDEES_PROVIDED,
           'No attendees found in jsonString.'
-        )
+        ),
+        0,
+        0,
+        0,
+        0,
+        'Failed',
+        'AI Extraction'
       );
     }
 
@@ -148,7 +221,13 @@ public with sharing class ProcessAppointmentTakerAttendees {
         buildStatus(
           STATUS_PART.NO_MATCHING_LINE_ITEMS,
           'No open supported registration line items found.'
-        )
+        ),
+        attendees.size(),
+        0,
+        attendees.size(),
+        0,
+        'Failed',
+        'Other'
       );
     }
 
@@ -201,6 +280,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
     // Track claimed slot IDs to avoid double-assignment
     Set<Id> claimed = new Set<Id>();
     List<OpportunityLineItem> toUpdate = new List<OpportunityLineItem>();
+    List<AssignmentAttempt> attemptedAssignments = new List<AssignmentAttempt>();
+    List<AssignmentAttempt> skippedAssignments = new List<AssignmentAttempt>();
 
     for (Attendee a : attendees) {
       if (toUpdate.size() >= available.size())
@@ -233,6 +314,15 @@ public with sharing class ProcessAppointmentTakerAttendees {
 
       if (target != null) {
         claimed.add(target.Id);
+        Id assignedContactId = null;
+        if (String.isNotBlank(a.email)) {
+          assignedContactId = emailToContactId.get(a.email.toLowerCase());
+        }
+
+        attemptedAssignments.add(
+          new AssignmentAttempt(a, target, assignedContactId)
+        );
+
         // Build clean SObject to avoid USER_MODE FLS errors on relationship fields
         OpportunityLineItem upd = new OpportunityLineItem(Id = target.Id);
         upd.Attendee_First_Name__c = a.firstName;
@@ -241,21 +331,30 @@ public with sharing class ProcessAppointmentTakerAttendees {
         upd.Attendee_Email__c = a.email;
 
         // Populate Event Attendee Contact lookup
-        if (String.isNotBlank(a.email)) {
-          Id contactId = emailToContactId.get(a.email.toLowerCase());
-          if (contactId != null) {
-            upd.Event_Attendee_Contact__c = contactId;
-          }
+        if (assignedContactId != null) {
+          upd.Event_Attendee_Contact__c = assignedContactId;
         }
         toUpdate.add(upd);
+      } else {
+        skippedAssignments.add(new AssignmentAttempt(a, null, null));
       }
+    }
+
+    for (Integer i = toUpdate.size(); i < attendees.size(); i++) {
+      skippedAssignments.add(new AssignmentAttempt(attendees[i], null, null));
     }
 
     if (toUpdate.isEmpty()) {
       // Should not happen due to earlier checks, but guard anyway
       return new Result(
         true,
-        buildStatus(STATUS_PART.NO_MATCHING_LINE_ITEMS, 'No slots updated.')
+        buildStatus(STATUS_PART.NO_MATCHING_LINE_ITEMS, 'No slots updated.'),
+        attendees.size(),
+        0,
+        attendees.size(),
+        available.size(),
+        'Failed',
+        'Other'
       );
     }
 
@@ -292,6 +391,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
     Integer unassignedFromDemand = Math.max(0, attendees.size() - successCount);
     // prefer attendee-centric unassigned count for clarity
     Integer notAssigned = unassignedFromDemand;
+    Integer openSlotsRemaining = Math.max(0, available.size() - successCount);
+    String errorCategory = classifyProcessingError(errs);
 
     String detail =
       'Attendees provided=' +
@@ -301,24 +402,52 @@ public with sharing class ProcessAppointmentTakerAttendees {
       ', notAssigned=' +
       notAssigned +
       ', openSlots=' +
-      available.size();
+      openSlotsRemaining;
 
     if (!errs.isEmpty()) {
       detail += '. Errors: ' + String.join(errs, ' | ');
     }
 
+    logAssignmentDetails(
+      req.processingLogId,
+      attemptedAssignments,
+      skippedAssignments,
+      srList
+    );
+
     if (successCount == attendees.size()) {
       return new Result(
         true,
-        buildStatus(STATUS_PART.SUCCESS_ASSIGNED, detail)
+        buildStatus(STATUS_PART.SUCCESS_ASSIGNED, detail),
+        attendees.size(),
+        successCount,
+        notAssigned,
+        openSlotsRemaining,
+        'Success',
+        'None'
       );
     } else if (successCount > 0) {
       return new Result(
         true,
-        buildStatus(STATUS_PART.PARTIAL_ASSIGNED, detail)
+        buildStatus(STATUS_PART.PARTIAL_ASSIGNED, detail),
+        attendees.size(),
+        successCount,
+        notAssigned,
+        openSlotsRemaining,
+        'Partial Success',
+        errorCategory
       );
     } else {
-      return new Result(false, buildStatus(STATUS_PART.ERROR, detail));
+      return new Result(
+        false,
+        buildStatus(STATUS_PART.ERROR, detail),
+        attendees.size(),
+        successCount,
+        notAssigned,
+        openSlotsRemaining,
+        'Failed',
+        errorCategory
+      );
     }
   }
 
@@ -347,7 +476,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
           Product_Type__c,
           Attendee_First_Name__c,
           Attendee_Name__c,
-          Attendee_Email__c
+          Attendee_Email__c,
+          Event_Attendee_Contact__c
         FROM OpportunityLineItem
         WHERE
           OpportunityId = :opportunityId
@@ -370,7 +500,8 @@ public with sharing class ProcessAppointmentTakerAttendees {
         Product_Type__c,
         Attendee_First_Name__c,
         Attendee_Name__c,
-        Attendee_Email__c
+        Attendee_Email__c,
+        Event_Attendee_Contact__c
       FROM OpportunityLineItem
       WHERE
         OpportunityId = :opportunityId
@@ -424,6 +555,101 @@ public with sharing class ProcessAppointmentTakerAttendees {
    * @description Custom exception for processing errors
    */
   private class ProcessException extends Exception {
+  }
+
+  private static void logAssignmentDetails(
+    Id processingLogId,
+    List<AssignmentAttempt> attemptedAssignments,
+    List<AssignmentAttempt> skippedAssignments,
+    Database.SaveResult[] srList
+  ) {
+    if (processingLogId == null) {
+      return;
+    }
+
+    List<AttendeeAssignmentDetailLogger.AssignmentDetailInput> inputs = new List<AttendeeAssignmentDetailLogger.AssignmentDetailInput>();
+
+    for (Integer i = 0; i < attemptedAssignments.size(); i++) {
+      AssignmentAttempt attempt = attemptedAssignments[i];
+      AttendeeAssignmentDetailLogger.AssignmentDetailInput input = new AttendeeAssignmentDetailLogger.AssignmentDetailInput();
+      input.processingLogId = processingLogId;
+      input.opportunityProductId = attempt.target.Id;
+      input.productName = attempt.target.Product2.Name;
+      input.productType = attempt.target.Product_Type__c;
+      input.eventName = attempt.target.Event_Name__c;
+      input.extractedName = buildAttendeeName(attempt.attendee);
+      input.extractedEmail = attempt.attendee.email;
+      input.assignedContactId = attempt.assignedContactId;
+      input.previousAttendeeName = attempt.target.Attendee_Name__c;
+      input.previousAttendeeEmail = attempt.target.Attendee_Email__c;
+      input.previousContactId = attempt.target.Event_Attendee_Contact__c;
+
+      if (srList[i].isSuccess()) {
+        input.assignmentStatus = 'Assigned';
+      } else {
+        input.assignmentStatus = 'Failed';
+        input.assignmentError = extractSaveErrors(srList[i]);
+      }
+      inputs.add(input);
+    }
+
+    for (AssignmentAttempt attempt : skippedAssignments) {
+      AttendeeAssignmentDetailLogger.AssignmentDetailInput input = new AttendeeAssignmentDetailLogger.AssignmentDetailInput();
+      input.processingLogId = processingLogId;
+      input.productType = attempt.attendee.productType;
+      input.eventName = attempt.attendee.eventName;
+      input.extractedName = buildAttendeeName(attempt.attendee);
+      input.extractedEmail = attempt.attendee.email;
+      input.assignmentStatus = 'Skipped';
+      input.assignmentError = 'No available open registration slot for attendee.';
+      inputs.add(input);
+    }
+
+    if (inputs.isEmpty()) {
+      return;
+    }
+
+    try {
+      AttendeeAssignmentDetailLogger.logAssignmentDetail(inputs);
+    } catch (Exception e) {
+      System.debug(
+        LoggingLevel.WARN,
+        'Failed to write attendee assignment detail logs: ' + e.getMessage()
+      );
+    }
+  }
+
+  private static String buildAttendeeName(Attendee attendee) {
+    if (attendee == null) {
+      return null;
+    }
+
+    String fullName = attendee.firstName;
+    if (String.isNotBlank(attendee.lastName)) {
+      fullName += ' ' + attendee.lastName;
+    }
+    return fullName;
+  }
+
+  private static String extractSaveErrors(Database.SaveResult saveResult) {
+    List<String> messages = new List<String>();
+    for (Database.Error err : saveResult.getErrors()) {
+      messages.add(err.getStatusCode() + ' - ' + err.getMessage());
+    }
+    return String.join(messages, ' | ');
+  }
+
+  private static String classifyProcessingError(List<String> errors) {
+    if (errors == null || errors.isEmpty()) {
+      return 'None';
+    }
+
+    for (String err : errors) {
+      if (err.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')) {
+        return 'Validation';
+      }
+    }
+    return 'DML';
   }
 
   /**

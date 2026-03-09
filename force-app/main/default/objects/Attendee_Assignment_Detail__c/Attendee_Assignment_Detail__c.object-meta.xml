@@ -8,7 +8,7 @@
         <type>AutoNumber</type>
     </nameField>
     <deploymentStatus>Deployed</deploymentStatus>
-    <sharingModel>ReadWrite</sharingModel>
+    <sharingModel>ControlledByParent</sharingModel>
     <description
   >Individual line-item record for each OLI attendee assignment attempt</description>
 </CustomObject>

@@ -192,10 +192,17 @@ private class ProcessAppointmentTakerAttendeesTest {
   @IsTest
   static void testHappyPath_exactFill() {
     Opportunity opp = getTestOpportunity();
+    AttendeeProcessingLogger.ProcessingLogInput logInput = new AttendeeProcessingLogger.ProcessingLogInput();
+    logInput.opportunityId = opp.Id;
+    logInput.processingType = 'Inbound Reply';
+    List<AttendeeProcessingLogger.ProcessingLogOutput> logOutputs = AttendeeProcessingLogger.createProcessingLog(
+      new List<AttendeeProcessingLogger.ProcessingLogInput>{ logInput }
+    );
 
     ProcessAppointmentTakerAttendees.Request r = new ProcessAppointmentTakerAttendees.Request();
     r.opportunityId = opp.Id;
     r.jsonString = attendeesJson(2);
+    r.processingLogId = logOutputs[0].processingLogId;
 
     Test.startTest();
     List<ProcessAppointmentTakerAttendees.Result> res = ProcessAppointmentTakerAttendees.process(
@@ -209,6 +216,12 @@ private class ProcessAppointmentTakerAttendeesTest {
       res[0].isSuccess,
       'Should succeed: ' + res[0].statusMessage
     );
+    System.assertEquals(2, res[0].attendeesProvided);
+    System.assertEquals(2, res[0].attendeesAssigned);
+    System.assertEquals(0, res[0].attendeesNotAssigned);
+    System.assertEquals(0, res[0].openSlotsRemaining);
+    System.assertEquals('Success', res[0].finalStatus);
+    System.assertEquals('None', res[0].errorCategory);
     System.assert(
       res[0].statusMessage.contains('SUCCESS_ASSIGNED'),
       'Expected SUCCESS_ASSIGNED in message: ' + res[0].statusMessage
@@ -257,6 +270,20 @@ private class ProcessAppointmentTakerAttendeesTest {
       olis[1].Event_Attendee_Contact__c,
       'OLI 1 Event_Attendee_Contact__c should match Contact with first1.last1@example.com'
     );
+
+    List<Attendee_Assignment_Detail__c> details = [
+      SELECT Processing_Log__c, Assignment_Status__c, Extracted_Email__c
+      FROM Attendee_Assignment_Detail__c
+      WHERE Processing_Log__c = :logOutputs[0].processingLogId
+      ORDER BY Extracted_Email__c
+    ];
+    System.assertEquals(
+      2,
+      details.size(),
+      'Two assignment detail logs expected'
+    );
+    System.assertEquals('Assigned', details[0].Assignment_Status__c);
+    System.assertEquals('Assigned', details[1].Assignment_Status__c);
   }
 
   @IsTest
@@ -284,6 +311,11 @@ private class ProcessAppointmentTakerAttendeesTest {
       res[0].statusMessage.contains('SUCCESS_ASSIGNED'),
       'Expected PARTIAL_ASSIGNED or SUCCESS_ASSIGNED'
     );
+    System.assertEquals(3, res[0].attendeesProvided);
+    System.assertEquals(2, res[0].attendeesAssigned);
+    System.assertEquals(1, res[0].attendeesNotAssigned);
+    System.assertEquals(0, res[0].openSlotsRemaining);
+    System.assertEquals('Partial Success', res[0].finalStatus);
     System.assert(
       res[0].statusMessage.contains('notAssigned=') &&
       res[0].statusMessage.contains('assigned='),

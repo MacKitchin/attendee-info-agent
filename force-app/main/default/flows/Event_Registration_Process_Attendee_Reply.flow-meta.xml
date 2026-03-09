@@ -133,6 +133,70 @@ Status Message: {!varStatusMessage}</stringValue>
         <offset>0</offset>
     </actionCalls>
     <actionCalls>
+        <name>Create_Attendee_Processing_Log</name>
+        <label>Create Attendee Processing Log</label>
+        <locationX>176</locationX>
+        <locationY>269</locationY>
+        <actionName>AttendeeProcessingLogger</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Extract_Attendee_Information</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>opportunityId</name>
+            <value>
+                <elementReference>$Record.RelatedToId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>processingType</name>
+            <value>
+                <stringValue>Inbound Reply</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <stringValue>In Progress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailMessageId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderEmail</name>
+            <value>
+                <elementReference>$Record.FromAddress</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderName</name>
+            <value>
+                <elementReference>$Record.FromName</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>flowApiName</name>
+            <value>
+                <stringValue
+        >Event_Registration_Process_Attendee_Reply</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogger</nameSegment>
+        <offset>0</offset>
+        <outputParameters>
+            <assignToReference>varProcessingLogId</assignToReference>
+            <name>processingLogId</name>
+        </outputParameters>
+    </actionCalls>
+    <actionCalls>
         <description
     >Calls your Flex Prompt Template to parse the email body into attendee JSON</description>
         <name>Extract_Attendee_Information</name>
@@ -142,8 +206,7 @@ Status Message: {!varStatusMessage}</stringValue>
         <actionName>Extract_Attendee_Information</actionName>
         <actionType>generatePromptResponse</actionType>
         <connector>
-            <targetReference
-      >Pass_to_Agent_to_Process_Attendees</targetReference>
+            <targetReference>Update_Processing_Log_After_AI</targetReference>
         </connector>
         <faultConnector>
             <targetReference>Assign_Fault_Message</targetReference>
@@ -158,6 +221,43 @@ Status Message: {!varStatusMessage}</stringValue>
         <nameSegment>Extract_Attendee_Information</nameSegment>
         <offset>0</offset>
         <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+    <actionCalls>
+        <name>Update_Processing_Log_After_AI</name>
+        <label>Update Processing Log After AI</label>
+        <locationX>176</locationX>
+        <locationY>377</locationY>
+        <actionName>AttendeeProcessingLogUpdater</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference
+      >Pass_to_Agent_to_Process_Attendees</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <stringValue>In Progress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>aiRawResponse</name>
+            <value>
+                <elementReference
+        >Extract_Attendee_Information.promptResponse</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
+        <offset>0</offset>
     </actionCalls>
     <actionCalls>
         <description
@@ -188,8 +288,38 @@ Status Message: {!varStatusMessage}</stringValue>
                 <elementReference>$Record.RelatedToId</elementReference>
             </value>
         </inputParameters>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
         <nameSegment>ProcessAppointmentTakerAttendees</nameSegment>
         <offset>0</offset>
+        <outputParameters>
+            <assignToReference>varAttendeesProvided</assignToReference>
+            <name>attendeesProvided</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varAttendeesAssigned</assignToReference>
+            <name>attendeesAssigned</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varAttendeesNotAssigned</assignToReference>
+            <name>attendeesNotAssigned</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varOpenSlotsRemaining</assignToReference>
+            <name>openSlotsRemaining</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varFinalStatus</assignToReference>
+            <name>finalStatus</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varErrorCategory</assignToReference>
+            <name>errorCategory</name>
+        </outputParameters>
         <outputParameters>
             <assignToReference>varIsSuccess</assignToReference>
             <name>isSuccess</name>
@@ -198,6 +328,171 @@ Status Message: {!varStatusMessage}</stringValue>
             <assignToReference>varStatusMessage</assignToReference>
             <name>statusMessage</name>
         </outputParameters>
+    </actionCalls>
+    <actionCalls>
+        <name>Update_Processing_Log_Success_Result</name>
+        <label>Update Processing Log Success Result</label>
+        <locationX>50</locationX>
+        <locationY>593</locationY>
+        <actionName>AttendeeProcessingLogUpdater</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Action_Send_Success_Notification</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <elementReference>varFinalStatus</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attendeesProvided</name>
+            <value>
+                <elementReference>varAttendeesProvided</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attendeesAssigned</name>
+            <value>
+                <elementReference>varAttendeesAssigned</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attendeesNotAssigned</name>
+            <value>
+                <elementReference>varAttendeesNotAssigned</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>openSlotsRemaining</name>
+            <value>
+                <elementReference>varOpenSlotsRemaining</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorCategory</name>
+            <value>
+                <elementReference>varErrorCategory</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Update_Processing_Log_Failure_Result</name>
+        <label>Update Processing Log Failure Result</label>
+        <locationX>314</locationX>
+        <locationY>593</locationY>
+        <actionName>AttendeeProcessingLogUpdater</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Action_Send_Failure_Notification</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Action_Send_Failure_Notification</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <elementReference>varFinalStatus</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attendeesProvided</name>
+            <value>
+                <elementReference>varAttendeesProvided</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attendeesAssigned</name>
+            <value>
+                <elementReference>varAttendeesAssigned</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>attendeesNotAssigned</name>
+            <value>
+                <elementReference>varAttendeesNotAssigned</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>openSlotsRemaining</name>
+            <value>
+                <elementReference>varOpenSlotsRemaining</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorMessage</name>
+            <value>
+                <elementReference>varStatusMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorCategory</name>
+            <value>
+                <elementReference>varErrorCategory</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Update_Processing_Log_Failure_Fault</name>
+        <label>Update Processing Log Failure Fault</label>
+        <locationX>500</locationX>
+        <locationY>485</locationY>
+        <actionName>AttendeeProcessingLogUpdater</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Action_Send_Failure_Notification</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Action_Send_Failure_Notification</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <stringValue>Failed</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorMessage</name>
+            <value>
+                <elementReference>varStatusMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorCategory</name>
+            <value>
+                <stringValue>Flow Error</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
+        <offset>0</offset>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
@@ -214,7 +509,8 @@ Status Message: {!varStatusMessage}</stringValue>
             </value>
         </assignmentItems>
         <connector>
-            <targetReference>Action_Send_Failure_Notification</targetReference>
+            <targetReference
+      >Update_Processing_Log_Failure_Fault</targetReference>
         </connector>
     </assignments>
     <decisions>
@@ -223,7 +519,8 @@ Status Message: {!varStatusMessage}</stringValue>
         <locationX>176</locationX>
         <locationY>539</locationY>
         <defaultConnector>
-            <targetReference>Action_Send_Failure_Notification</targetReference>
+            <targetReference
+      >Update_Processing_Log_Failure_Result</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Failed</defaultConnectorLabel>
         <rules>
@@ -238,7 +535,7 @@ Status Message: {!varStatusMessage}</stringValue>
             </conditions>
             <connector>
                 <targetReference
-        >Action_Send_Success_Notification</targetReference>
+        >Update_Processing_Log_Success_Result</targetReference>
             </connector>
             <label>Success</label>
         </rules>
@@ -270,7 +567,7 @@ Status Message: {!varStatusMessage}</stringValue>
         <assignNullValuesIfNoRecordsFound
     >false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Extract_Attendee_Information</targetReference>
+            <targetReference>Create_Attendee_Processing_Log</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -310,10 +607,63 @@ Status Message: {!varStatusMessage}</stringValue>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Active</status>
+    <variables>
+        <name>varAttendeesAssigned</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+    </variables>
+    <variables>
+        <name>varAttendeesNotAssigned</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+    </variables>
+    <variables>
+        <name>varAttendeesProvided</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+    </variables>
+    <variables>
+        <name>varErrorCategory</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varFinalStatus</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
     <variables>
         <name>varIsSuccess</name>
         <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varOpenSlotsRemaining</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+    </variables>
+    <variables>
+        <name>varProcessingLogId</name>
+        <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>false</isInput>
         <isOutput>false</isOutput>
