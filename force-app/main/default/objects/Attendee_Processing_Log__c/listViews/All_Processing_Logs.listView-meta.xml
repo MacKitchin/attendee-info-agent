@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All_Processing_Logs</fullName>
+    <label>All Processing Logs</label>
+    <filterScope>Everything</filterScope>
+    <columns>NAME</columns>
+    <columns>Opportunity__c</columns>
+    <columns>Processing_Type__c</columns>
+    <columns>Status__c</columns>
+    <columns>Sender_Email__c</columns>
+    <columns>Total_Registration_Products__c</columns>
+    <columns>Attendees_Assigned__c</columns>
+    <columns>Error_Category__c</columns>
+    <columns>CREATED_DATE</columns>
+</ListView>

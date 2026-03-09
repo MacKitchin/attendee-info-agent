@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Error_Category__c</fullName>
+    <label>Error Category</label>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>false</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>None</fullName><default>true</default><label
+        >None</label></value>
+            <value><fullName>AI Extraction</fullName><default
+        >false</default><label>AI Extraction</label></value>
+            <value><fullName>JSON Parse</fullName><default>false</default><label
+        >JSON Parse</label></value>
+            <value><fullName>Contact Match</fullName><default
+        >false</default><label>Contact Match</label></value>
+            <value><fullName>DML</fullName><default>false</default><label
+        >DML</label></value>
+            <value><fullName>Flow Error</fullName><default>false</default><label
+        >Flow Error</label></value>
+            <value><fullName>Validation</fullName><default>false</default><label
+        >Validation</label></value>
+            <value><fullName>Other</fullName><default>false</default><label
+        >Other</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

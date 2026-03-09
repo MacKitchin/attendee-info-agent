@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Processing_Type__c</fullName>
+    <label>Processing Type</label>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>false</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Outbound Email</fullName><default
+        >false</default><label>Outbound Email</label></value>
+            <value><fullName>Inbound Reply</fullName><default
+        >false</default><label>Inbound Reply</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

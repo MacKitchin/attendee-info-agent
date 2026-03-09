@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Attendee Processing Log</label>
+    <pluralLabel>Attendee Processing Logs</pluralLabel>
+    <nameField>
+        <label>Log Number</label>
+        <displayFormat>APL-{00000}</displayFormat>
+        <type>AutoNumber</type>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <description
+  >Tracks each execution of the attendee collection automation flows</description>
+</CustomObject>

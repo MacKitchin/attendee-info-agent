@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Inbound_Reply_Logs</fullName>
+    <label>Inbound Reply Logs</label>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Processing_Type__c</field>
+        <operation>equals</operation>
+        <value>Inbound Reply</value>
+    </filters>
+    <columns>NAME</columns>
+    <columns>Opportunity__c</columns>
+    <columns>Status__c</columns>
+    <columns>Sender_Email__c</columns>
+    <columns>Sender_Name__c</columns>
+    <columns>Attendees_Provided__c</columns>
+    <columns>Attendees_Assigned__c</columns>
+    <columns>AI_Model_Used__c</columns>
+    <columns>CREATED_DATE</columns>
+</ListView>

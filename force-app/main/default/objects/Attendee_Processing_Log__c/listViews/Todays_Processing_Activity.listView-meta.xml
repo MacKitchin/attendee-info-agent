@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Todays_Processing_Activity</fullName>
+    <label>Today's Processing Activity</label>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>CREATED_DATE</field>
+        <operation>equals</operation>
+        <value>TODAY</value>
+    </filters>
+    <columns>NAME</columns>
+    <columns>Opportunity__c</columns>
+    <columns>Processing_Type__c</columns>
+    <columns>Status__c</columns>
+    <columns>Attendees_Provided__c</columns>
+    <columns>Attendees_Assigned__c</columns>
+    <columns>Open_Slots_Remaining__c</columns>
+    <columns>CREATED_DATE</columns>
+</ListView>

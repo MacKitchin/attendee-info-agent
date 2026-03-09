@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Processing_Log__c</fullName>
+    <label>Processing Log</label>
+    <type>MasterDetail</type>
+    <referenceTo>Attendee_Processing_Log__c</referenceTo>
+    <relationshipLabel>Assignment Details</relationshipLabel>
+    <relationshipName>Assignment_Details</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>
