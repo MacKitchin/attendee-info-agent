@@ -35,6 +35,8 @@ private class AttendeeProcessingLoggerTest {
     input.opportunityId = opp.Id;
     input.processingType = 'Inbound Reply';
     input.status = 'In Progress';
+    input.emailMessageId = '02s000000000001AAA';
+    input.outgoingEmailId = '02s000000000002AAA';
     input.senderEmail = 'test@example.com';
     input.senderName = 'Test Sender';
     input.totalRegistrationProducts = 3;
@@ -74,6 +76,8 @@ private class AttendeeProcessingLoggerTest {
         Opportunity__c,
         Processing_Type__c,
         Status__c,
+        Processing_Date__c,
+        Outgoing_Email_Id__c,
         Sender_Email__c,
         Total_Registration_Products__c,
         Flow_API_Name__c
@@ -83,6 +87,8 @@ private class AttendeeProcessingLoggerTest {
     System.assertEquals(opp.Id, log.Opportunity__c);
     System.assertEquals('Inbound Reply', log.Processing_Type__c);
     System.assertEquals('In Progress', log.Status__c);
+    System.assertNotEquals(null, log.Processing_Date__c);
+    System.assertEquals('02s000000000002AAA', log.Outgoing_Email_Id__c);
     System.assertEquals('test@example.com', log.Sender_Email__c);
     System.assertEquals(3, log.Total_Registration_Products__c);
   }
@@ -228,11 +234,11 @@ private class AttendeeProcessingLoggerTest {
     // Update it
     AttendeeProcessingLogUpdater.UpdateLogInput updateInput = new AttendeeProcessingLogUpdater.UpdateLogInput();
     updateInput.processingLogId = logOutputs[0].processingLogId;
-    updateInput.status = 'Success';
+    updateInput.status = 'Partial Success';
     updateInput.attendeesProvided = 3;
-    updateInput.attendeesAssigned = 3;
-    updateInput.attendeesNotAssigned = 0;
-    updateInput.openSlotsRemaining = 0;
+    updateInput.attendeesAssigned = 2;
+    updateInput.attendeesNotAssigned = 1;
+    updateInput.openSlotsRemaining = 1;
     updateInput.aiRawResponse = '{"attendees": [{"name": "John"}]}';
     updateInput.aiModelUsed = 'gpt-4';
 
@@ -253,10 +259,36 @@ private class AttendeeProcessingLoggerTest {
       FROM Attendee_Processing_Log__c
       WHERE Id = :logOutputs[0].processingLogId
     ];
-    System.assertEquals('Success', log.Status__c);
+    System.assertEquals('Partial Success', log.Status__c);
     System.assertEquals(3, log.Attendees_Provided__c);
-    System.assertEquals(3, log.Attendees_Assigned__c);
+    System.assertEquals(2, log.Attendees_Assigned__c);
     System.assertEquals('gpt-4', log.AI_Model_Used__c);
+  }
+
+  @isTest
+  static void testCreateProcessingLog_ManualReprocess() {
+    Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+
+    AttendeeProcessingLogger.ProcessingLogInput input = new AttendeeProcessingLogger.ProcessingLogInput();
+    input.opportunityId = opp.Id;
+    input.processingType = 'Manual Reprocess';
+    input.status = 'Success';
+
+    Test.startTest();
+    List<AttendeeProcessingLogger.ProcessingLogOutput> outputs = AttendeeProcessingLogger.createProcessingLog(
+      new List<AttendeeProcessingLogger.ProcessingLogInput>{ input }
+    );
+    Test.stopTest();
+
+    System.assertEquals(true, outputs[0].success);
+
+    Attendee_Processing_Log__c log = [
+      SELECT Processing_Type__c, Status__c
+      FROM Attendee_Processing_Log__c
+      WHERE Id = :outputs[0].processingLogId
+    ];
+    System.assertEquals('Manual Reprocess', log.Processing_Type__c);
+    System.assertEquals('Success', log.Status__c);
   }
 
   @isTest

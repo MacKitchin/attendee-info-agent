@@ -12,6 +12,8 @@
         >false</default><label>Outbound Email</label></value>
             <value><fullName>Inbound Reply</fullName><default
         >false</default><label>Inbound Reply</label></value>
+            <value><fullName>Manual Reprocess</fullName><default
+        >false</default><label>Manual Reprocess</label></value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

@@ -12,8 +12,8 @@
         >In Progress</label></value>
             <value><fullName>Success</fullName><default>false</default><label
         >Success</label></value>
-            <value><fullName>Partial</fullName><default>false</default><label
-        >Partial</label></value>
+            <value><fullName>Partial Success</fullName><default
+        >false</default><label>Partial Success</label></value>
             <value><fullName>Failed</fullName><default>false</default><label
         >Failed</label></value>
         </valueSetDefinition>
