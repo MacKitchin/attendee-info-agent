@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendee Processing Audit Dashboard</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"
+      integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      :root {
+        --bg-primary: #f0f2f5;
+        --bg-card: #ffffff;
+        --bg-header: #0b1b34;
+        --text-primary: #1a1a2e;
+        --text-secondary: #6b7280;
+        --text-on-dark: #ffffff;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #3b82f6;
+        --partial: #8b5cf6;
+        --gap: 16px;
+        --radius: 10px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.5;
+      }
+
+      .dashboard {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: var(--gap);
+      }
+
+      .header {
+        background: var(--bg-header);
+        color: var(--text-on-dark);
+        padding: 20px 28px;
+        border-radius: var(--radius);
+        margin-bottom: var(--gap);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .header .subtitle {
+        font-size: 13px;
+        opacity: 0.7;
+        margin-top: 2px;
+      }
+
+      .filters {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .filter-group label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .filter-group select,
+      .filter-group input[type="date"] {
+        padding: 6px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .filter-group select option {
+        background: #1a1a2e;
+        color: #fff;
+      }
+
+      .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: var(--gap);
+        margin-bottom: var(--gap);
+      }
+
+      .kpi-card {
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        padding: 18px 22px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        border-left: 4px solid var(--info);
+      }
+
+      .kpi-card.success {
+        border-left-color: var(--success);
+      }
+      .kpi-card.warning {
+        border-left-color: var(--warning);
+      }
+      .kpi-card.danger {
+        border-left-color: var(--danger);
+      }
+      .kpi-card.partial {
+        border-left-color: var(--partial);
+      }
+      .kpi-card.info {
+        border-left-color: var(--info);
+      }
+
+      .kpi-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .kpi-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+
+      .chart-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--gap);
+        margin-bottom: var(--gap);
+      }
+
+      .chart-card {
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .chart-card h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+      }
+
+      .chart-card canvas {
+        max-height: 280px;
+      }
+
+      .table-section {
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        overflow-x: auto;
+        margin-bottom: var(--gap);
+      }
+
+      .table-section h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+
+      .tab-bar {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        border-bottom: 2px solid #e5e7eb;
+      }
+
+      .tab-btn {
+        padding: 8px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--text-secondary);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+      }
+
+      .tab-btn.active {
+        color: var(--info);
+        border-bottom-color: var(--info);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      thead th {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 2px solid #e5e7eb;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      thead th:hover {
+        color: var(--text-primary);
+        background: #f9fafb;
+      }
+
+      tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      tbody tr:hover {
+        background: #f9fafb;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-badge.success {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-badge.failed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .status-badge.partial {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .status-badge.in-progress {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .status-badge.skipped {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .expand-btn {
+        background: none;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 2px 8px;
+        cursor: pointer;
+        font-size: 11px;
+        color: var(--info);
+      }
+
+      .expand-btn:hover {
+        background: #eff6ff;
+      }
+
+      .detail-row {
+        background: #f9fafb;
+      }
+      .detail-row td {
+        padding: 8px 12px 8px 36px;
+        font-size: 12px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+      }
+
+      .empty-state h2 {
+        font-size: 18px;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+      }
+
+      .footer {
+        text-align: center;
+        padding: 16px;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      @media (max-width: 1200px) {
+        .kpi-row {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 768px) {
+        .kpi-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .chart-row {
+          grid-template-columns: 1fr;
+        }
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media print {
+        .filters {
+          display: none;
+        }
+        .tab-bar {
+          display: none;
+        }
+        body {
+          background: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard">
+      <div class="header">
+        <div>
+          <h1>Attendee Processing Audit Dashboard</h1>
+          <div class="subtitle">
+            Real-time monitoring of attendee collection flow activity
+          </div>
+        </div>
+        <div class="filters">
+          <div class="filter-group">
+            <label>Status</label>
+            <select id="filter-status" onchange="dashboard.applyFilters()">
+              <option value="all">All</option>
+              <option value="Success">Success</option>
+              <option value="Partial Success">Partial</option>
+              <option value="Failed">Failed</option>
+              <option value="In Progress">In Progress</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Type</label>
+            <select id="filter-type" onchange="dashboard.applyFilters()">
+              <option value="all">All</option>
+              <option value="Inbound Reply">Inbound</option>
+              <option value="Outbound Email">Outbound</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Error</label>
+            <select id="filter-error" onchange="dashboard.applyFilters()">
+              <option value="all">All</option>
+              <option value="None">None</option>
+              <option value="Validation Rule">Validation Rule</option>
+              <option value="JSON Parse">JSON Parse</option>
+              <option value="No Match">No Match</option>
+              <option value="DML Error">DML Error</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>From</label>
+            <input
+              type="date"
+              id="filter-from"
+              onchange="dashboard.applyFilters()"
+            />
+          </div>
+          <div class="filter-group">
+            <label>To</label>
+            <input
+              type="date"
+              id="filter-to"
+              onchange="dashboard.applyFilters()"
+            />
+          </div>
+        </div>
+      </div>
+
+      <section class="kpi-row" id="kpi-section"></section>
+
+      <section class="chart-row">
+        <div class="chart-card">
+          <h3>Processing Volume Over Time</h3>
+          <canvas id="chart-volume"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Status Distribution</h3>
+          <canvas id="chart-status"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Error Categories</h3>
+          <canvas id="chart-errors"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Assignment Outcomes</h3>
+          <canvas id="chart-assignments"></canvas>
+        </div>
+      </section>
+
+      <section class="table-section">
+        <h3>Processing Log Detail</h3>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="dashboard.switchTab('logs')">
+            Processing Logs
+          </button>
+          <button class="tab-btn" onclick="dashboard.switchTab('details')">
+            Assignment Details
+          </button>
+          <button class="tab-btn" onclick="dashboard.switchTab('failures')">
+            Failures Only
+          </button>
+        </div>
+        <div id="table-container"></div>
+      </section>
+
+      <div class="footer">
+        Attendee Processing Audit Dashboard &mdash; Data refreshed:
+        <span id="refresh-time"></span>
+        &mdash; Powered by Attendee_Processing_Log__c &amp;
+        Attendee_Assignment_Detail__c
+      </div>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════
+      // SAMPLE DATA — Replace this section with live Salesforce data
+      // via a Visualforce page, Lightning Web Component, or API call.
+      //
+      // The dashboard is fully functional with embedded data.
+      // To connect to live Salesforce data, see the comments at the
+      // bottom of this script.
+      // ═══════════════════════════════════════════════════════════════
+
+      const SAMPLE_LOGS = [
+        {
+          id: "APL-0001",
+          processingDate: "2026-03-01T10:23:00Z",
+          opportunityName: "Shreveport Medical Conference",
+          processingType: "Inbound Reply",
+          status: "Success",
+          senderEmail: "jane@hospital.org",
+          senderName: "Jane Wilson",
+          totalProducts: 7,
+          attendeesProvided: 7,
+          attendeesAssigned: 7,
+          attendeesNotAssigned: 0,
+          openSlots: 0,
+          errorCategory: "None",
+          errorMessage: "",
+          aiModel: "gpt-4o",
+          flowName: "Event_Registration_Process_Attendee_Reply",
+          details: [
+            {
+              id: "AAD-0001",
+              productName: "Appointment Taker - Cardiovascular Summit",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Sarah Chen",
+              extractedEmail: "schen@hospital.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0002",
+              productName: "Non-Appointment Taker - Cardiovascular Summit",
+              productType: "Non-Appointment Taker",
+              extractedName: "Mark Thompson",
+              extractedEmail: "mthompson@hospital.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0003",
+              productName: "Marketer - Cardiovascular Summit",
+              productType: "Marketer",
+              extractedName: "Lisa Park",
+              extractedEmail: "lpark@hospital.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0004",
+              productName: "Appointment Taker - Neurology Forum",
+              productType: "Appointment Taker",
+              extractedName: "Dr. James Wright",
+              extractedEmail: "jwright@hospital.org",
+              status: "Assigned",
+              previousName: "Dr. Old Name"
+            },
+            {
+              id: "AAD-0005",
+              productName: "Non-Appointment Taker - Neurology Forum",
+              productType: "Non-Appointment Taker",
+              extractedName: "TBD",
+              extractedEmail: "",
+              status: "Skipped (TBD)",
+              previousName: ""
+            },
+            {
+              id: "AAD-0006",
+              productName: "Appointment Taker - Orthopedics Conf",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Amy Liu",
+              extractedEmail: "aliu@hospital.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0007",
+              productName: "Marketer - Orthopedics Conf",
+              productType: "Marketer",
+              extractedName: "Tom Baker",
+              extractedEmail: "tbaker@hospital.org",
+              status: "Assigned",
+              previousName: ""
+            }
+          ]
+        },
+        {
+          id: "APL-0002",
+          processingDate: "2026-03-02T14:05:00Z",
+          opportunityName: "Austin Health Expo 2026",
+          processingType: "Inbound Reply",
+          status: "Failed",
+          senderEmail: "bob@medgroup.com",
+          senderName: "Bob Martinez",
+          totalProducts: 4,
+          attendeesProvided: 4,
+          attendeesAssigned: 0,
+          attendeesNotAssigned: 4,
+          openSlots: 4,
+          errorCategory: "Validation Rule",
+          errorMessage:
+            "FIELD_CUSTOM_VALIDATION_EXCEPTION: Guaranteed_Appointments__c is required for Appointment Taker products",
+          aiModel: "gpt-4o",
+          flowName: "Event_Registration_Process_Attendee_Reply",
+          details: [
+            {
+              id: "AAD-0008",
+              productName: "Appointment Taker - Cardiology Workshop",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Karen White",
+              extractedEmail: "kwhite@medgroup.com",
+              status: "Failed",
+              previousName: "",
+              error: "Validation Rule: Guaranteed_Appointments__c required"
+            },
+            {
+              id: "AAD-0009",
+              productName: "Non-Appointment Taker - Cardiology Workshop",
+              productType: "Non-Appointment Taker",
+              extractedName: "Steve Brown",
+              extractedEmail: "sbrown@medgroup.com",
+              status: "Failed",
+              previousName: "",
+              error: "Validation Rule: Guaranteed_Appointments__c required"
+            },
+            {
+              id: "AAD-0010",
+              productName: "Appointment Taker - Pediatrics Summit",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Mike Ross",
+              extractedEmail: "mross@medgroup.com",
+              status: "Failed",
+              previousName: "",
+              error: "Validation Rule: Guaranteed_Appointments__c required"
+            },
+            {
+              id: "AAD-0011",
+              productName: "Marketer - Pediatrics Summit",
+              productType: "Marketer",
+              extractedName: "Linda Garcia",
+              extractedEmail: "lgarcia@medgroup.com",
+              status: "Failed",
+              previousName: "",
+              error: "Validation Rule: Guaranteed_Appointments__c required"
+            }
+          ]
+        },
+        {
+          id: "APL-0003",
+          processingDate: "2026-03-03T09:15:00Z",
+          opportunityName: "Denver Surgical Conference",
+          processingType: "Inbound Reply",
+          status: "Partial Success",
+          senderEmail: "admin@surgicalgroup.net",
+          senderName: "Office Admin",
+          totalProducts: 5,
+          attendeesProvided: 3,
+          attendeesAssigned: 3,
+          attendeesNotAssigned: 0,
+          openSlots: 2,
+          errorCategory: "None",
+          errorMessage: "",
+          aiModel: "gpt-4o",
+          flowName: "Event_Registration_Process_Attendee_Reply",
+          details: [
+            {
+              id: "AAD-0012",
+              productName: "Appointment Taker - Robotics Surgery",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Helen Cho",
+              extractedEmail: "hcho@surgicalgroup.net",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0013",
+              productName: "Non-Appointment Taker - Robotics Surgery",
+              productType: "Non-Appointment Taker",
+              extractedName: "Pat Nguyen",
+              extractedEmail: "pnguyen@surgicalgroup.net",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0014",
+              productName: "Marketer - Robotics Surgery",
+              productType: "Marketer",
+              extractedName: "Alex Kim",
+              extractedEmail: "akim@surgicalgroup.net",
+              status: "Assigned",
+              previousName: ""
+            }
+          ]
+        },
+        {
+          id: "APL-0004",
+          processingDate: "2026-03-04T11:30:00Z",
+          opportunityName: "Phoenix Dental Summit",
+          processingType: "Inbound Reply",
+          status: "Failed",
+          senderEmail: "reply@dentalcorp.com",
+          senderName: "Auto Reply",
+          totalProducts: 3,
+          attendeesProvided: 0,
+          attendeesAssigned: 0,
+          attendeesNotAssigned: 0,
+          openSlots: 3,
+          errorCategory: "JSON Parse",
+          errorMessage:
+            'AI returned conversational text instead of JSON: "I was unable to find attendee information in this email..."',
+          aiModel: "gpt-4o",
+          flowName: "Event_Registration_Process_Attendee_Reply",
+          details: []
+        },
+        {
+          id: "APL-0005",
+          processingDate: "2026-03-05T08:00:00Z",
+          opportunityName: "Shreveport Medical Conference",
+          processingType: "Outbound Email",
+          status: "Success",
+          senderEmail: "",
+          senderName: "",
+          totalProducts: 7,
+          attendeesProvided: 0,
+          attendeesAssigned: 0,
+          attendeesNotAssigned: 0,
+          openSlots: 7,
+          errorCategory: "None",
+          errorMessage: "",
+          aiModel: "",
+          flowName: "Appointment_Taker_Send_Registration_Emails",
+          details: []
+        },
+        {
+          id: "APL-0006",
+          processingDate: "2026-03-06T15:45:00Z",
+          opportunityName: "Miami Oncology Conference",
+          processingType: "Inbound Reply",
+          status: "Success",
+          senderEmail: "scheduling@cancercenter.org",
+          senderName: "Scheduling Dept",
+          totalProducts: 6,
+          attendeesProvided: 6,
+          attendeesAssigned: 6,
+          attendeesNotAssigned: 0,
+          openSlots: 0,
+          errorCategory: "None",
+          errorMessage: "",
+          aiModel: "gpt-4o",
+          flowName: "Event_Registration_Process_Attendee_Reply",
+          details: [
+            {
+              id: "AAD-0015",
+              productName: "Appointment Taker - Immunotherapy Forum",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Rachel Green",
+              extractedEmail: "rgreen@cancercenter.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0016",
+              productName: "Non-Appointment Taker - Immunotherapy Forum",
+              productType: "Non-Appointment Taker",
+              extractedName: "Nurse Kim",
+              extractedEmail: "nkim@cancercenter.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0017",
+              productName: "Marketer - Immunotherapy Forum",
+              productType: "Marketer",
+              extractedName: "David Lee",
+              extractedEmail: "dlee@cancercenter.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0018",
+              productName: "Appointment Taker - Radiation Therapy Workshop",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Paul Adams",
+              extractedEmail: "padams@cancercenter.org",
+              status: "Assigned",
+              previousName: "Dr. Former Person"
+            },
+            {
+              id: "AAD-0019",
+              productName: "Non-Appointment Taker - Radiation Therapy Workshop",
+              productType: "Non-Appointment Taker",
+              extractedName: "Maria Santos",
+              extractedEmail: "msantos@cancercenter.org",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0020",
+              productName: "Marketer - Radiation Therapy Workshop",
+              productType: "Marketer",
+              extractedName: "Chris Park",
+              extractedEmail: "cpark@cancercenter.org",
+              status: "Assigned",
+              previousName: ""
+            }
+          ]
+        },
+        {
+          id: "APL-0007",
+          processingDate: "2026-03-07T13:20:00Z",
+          opportunityName: "Chicago Cardiology Summit",
+          processingType: "Inbound Reply",
+          status: "Success",
+          senderEmail: "events@heartclinic.com",
+          senderName: "Events Team",
+          totalProducts: 3,
+          attendeesProvided: 3,
+          attendeesAssigned: 3,
+          attendeesNotAssigned: 0,
+          openSlots: 0,
+          errorCategory: "None",
+          errorMessage: "",
+          aiModel: "gpt-4o",
+          flowName: "Event_Registration_Process_Attendee_Reply",
+          details: [
+            {
+              id: "AAD-0021",
+              productName: "Appointment Taker - Heart Failure Symposium",
+              productType: "Appointment Taker",
+              extractedName: "Dr. Aisha Patel",
+              extractedEmail: "apatel@heartclinic.com",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0022",
+              productName: "Non-Appointment Taker - Heart Failure Symposium",
+              productType: "Non-Appointment Taker",
+              extractedName: "John Cooper",
+              extractedEmail: "jcooper@heartclinic.com",
+              status: "Assigned",
+              previousName: ""
+            },
+            {
+              id: "AAD-0023",
+              productName: "Marketer - Heart Failure Symposium",
+              productType: "Marketer",
+              extractedName: "Emily Chang",
+              extractedEmail: "echang@heartclinic.com",
+              status: "Assigned",
+              previousName: ""
+            }
+          ]
+        },
+        {
+          id: "APL-0008",
+          processingDate: "2026-03-08T16:10:00Z",
+          opportunityName: "Austin Health Expo 2026",
+          processingType: "Outbound Email",
+          status: "Success",
+          senderEmail: "",
+          senderName: "",
+          totalProducts: 4,
+          attendeesProvided: 0,
+          attendeesAssigned: 0,
+          attendeesNotAssigned: 0,
+          openSlots: 4,
+          errorCategory: "None",
+          errorMessage: "",
+          aiModel: "",
+          flowName: "Appointment_Taker_Send_Registration_Emails",
+          details: []
+        }
+      ];
+
+      // ═══════════════════════════════════════════════════════════════
+
+      const COLORS = [
+        "#3b82f6",
+        "#f59e0b",
+        "#10b981",
+        "#ef4444",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+        "#84cc16"
+      ];
+
+      class Dashboard {
+        constructor(data) {
+          this.rawData = data;
+          this.filteredData = data;
+          this.charts = {};
+          this.currentTab = "logs";
+          this.sortCol = "processingDate";
+          this.sortDir = "desc";
+          this.init();
+        }
+
+        init() {
+          document.getElementById("refresh-time").textContent =
+            new Date().toLocaleString();
+          this.renderKPIs();
+          this.createCharts();
+          this.renderTable();
+        }
+
+        applyFilters() {
+          const status = document.getElementById("filter-status").value;
+          const type = document.getElementById("filter-type").value;
+          const error = document.getElementById("filter-error").value;
+          const from = document.getElementById("filter-from").value;
+          const to = document.getElementById("filter-to").value;
+
+          this.filteredData = this.rawData.filter((row) => {
+            if (status !== "all" && row.status !== status) return false;
+            if (type !== "all" && row.processingType !== type) return false;
+            if (error !== "all" && row.errorCategory !== error) return false;
+            if (from && row.processingDate < from) return false;
+            if (to && row.processingDate > to + "T23:59:59Z") return false;
+            return true;
+          });
+
+          this.renderKPIs();
+          this.updateCharts();
+          this.renderTable();
+        }
+
+        renderKPIs() {
+          const d = this.filteredData;
+          const total = d.length;
+          const success = d.filter((r) => r.status === "Success").length;
+          const failed = d.filter((r) => r.status === "Failed").length;
+          const partial = d.filter(
+            (r) => r.status === "Partial Success"
+          ).length;
+          const totalAssigned = d.reduce(
+            (s, r) => s + (r.attendeesAssigned || 0),
+            0
+          );
+          const totalProvided = d.reduce(
+            (s, r) => s + (r.attendeesProvided || 0),
+            0
+          );
+          const successRate =
+            total > 0 ? ((success / total) * 100).toFixed(1) : "0.0";
+
+          const html = `
+            <div class="kpi-card info">
+                <div class="kpi-label">Total Runs</div>
+                <div class="kpi-value">${total}</div>
+                <div class="kpi-sub">Processing log entries</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="kpi-label">Successful</div>
+                <div class="kpi-value" style="color:var(--success)">${success}</div>
+                <div class="kpi-sub">${successRate}% success rate</div>
+            </div>
+            <div class="kpi-card partial">
+                <div class="kpi-label">Partial Success</div>
+                <div class="kpi-value" style="color:var(--partial)">${partial}</div>
+                <div class="kpi-sub">Some attendees assigned</div>
+            </div>
+            <div class="kpi-card danger">
+                <div class="kpi-label">Failed</div>
+                <div class="kpi-value" style="color:var(--danger)">${failed}</div>
+                <div class="kpi-sub">${total > 0 ? ((failed / total) * 100).toFixed(1) : 0}% failure rate</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="kpi-label">Attendees Assigned</div>
+                <div class="kpi-value">${totalAssigned}</div>
+                <div class="kpi-sub">of ${totalProvided} provided</div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="kpi-label">Open Slots</div>
+                <div class="kpi-value">${d.reduce((s, r) => s + (r.openSlots || 0), 0)}</div>
+                <div class="kpi-sub">Still need attendees</div>
+            </div>
+        `;
+          document.getElementById("kpi-section").innerHTML = html;
+        }
+
+        createCharts() {
+          // Volume over time
+          this.charts.volume = new Chart(
+            document.getElementById("chart-volume").getContext("2d"),
+            {
+              type: "bar",
+              data: { labels: [], datasets: [] },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: "top",
+                    labels: {
+                      usePointStyle: true,
+                      padding: 12,
+                      font: { size: 11 }
+                    }
+                  }
+                },
+                scales: {
+                  x: { grid: { display: false } },
+                  y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+              }
+            }
+          );
+
+          // Status doughnut
+          this.charts.status = new Chart(
+            document.getElementById("chart-status").getContext("2d"),
+            {
+              type: "doughnut",
+              data: {
+                labels: [],
+                datasets: [{ data: [], backgroundColor: [] }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "55%",
+                plugins: {
+                  legend: {
+                    position: "right",
+                    labels: {
+                      usePointStyle: true,
+                      padding: 12,
+                      font: { size: 11 }
+                    }
+                  }
+                }
+              }
+            }
+          );
+
+          // Error categories
+          this.charts.errors = new Chart(
+            document.getElementById("chart-errors").getContext("2d"),
+            {
+              type: "bar",
+              data: {
+                labels: [],
+                datasets: [{ data: [], backgroundColor: [] }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: "y",
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: { beginAtZero: true, ticks: { stepSize: 1 } },
+                  y: { grid: { display: false } }
+                }
+              }
+            }
+          );
+
+          // Assignment outcomes
+          this.charts.assignments = new Chart(
+            document.getElementById("chart-assignments").getContext("2d"),
+            {
+              type: "doughnut",
+              data: {
+                labels: [],
+                datasets: [{ data: [], backgroundColor: [] }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "55%",
+                plugins: {
+                  legend: {
+                    position: "right",
+                    labels: {
+                      usePointStyle: true,
+                      padding: 12,
+                      font: { size: 11 }
+                    }
+                  }
+                }
+              }
+            }
+          );
+
+          this.updateCharts();
+        }
+
+        updateCharts() {
+          const d = this.filteredData;
+
+          // Volume by date
+          const dateMap = {};
+          d.forEach((r) => {
+            const day = r.processingDate.substring(0, 10);
+            if (!dateMap[day])
+              dateMap[day] = { success: 0, failed: 0, partial: 0 };
+            if (r.status === "Success") dateMap[day].success++;
+            else if (r.status === "Failed") dateMap[day].failed++;
+            else dateMap[day].partial++;
+          });
+          const dates = Object.keys(dateMap).sort();
+          this.charts.volume.data.labels = dates.map((d) =>
+            new Date(d).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric"
+            })
+          );
+          this.charts.volume.data.datasets = [
+            {
+              label: "Success",
+              data: dates.map((d) => dateMap[d].success),
+              backgroundColor: "#10b981cc",
+              borderRadius: 4
+            },
+            {
+              label: "Failed",
+              data: dates.map((d) => dateMap[d].failed),
+              backgroundColor: "#ef4444cc",
+              borderRadius: 4
+            },
+            {
+              label: "Partial",
+              data: dates.map((d) => dateMap[d].partial),
+              backgroundColor: "#8b5cf6cc",
+              borderRadius: 4
+            }
+          ];
+          this.charts.volume.update("none");
+
+          // Status distribution
+          const statuses = {};
+          d.forEach((r) => {
+            statuses[r.status] = (statuses[r.status] || 0) + 1;
+          });
+          const statusColors = {
+            Success: "#10b981",
+            Failed: "#ef4444",
+            "Partial Success": "#8b5cf6",
+            "In Progress": "#3b82f6"
+          };
+          this.charts.status.data.labels = Object.keys(statuses);
+          this.charts.status.data.datasets[0].data = Object.values(statuses);
+          this.charts.status.data.datasets[0].backgroundColor = Object.keys(
+            statuses
+          ).map((s) => statusColors[s] || "#6b7280");
+          this.charts.status.update("none");
+
+          // Error categories
+          const errors = {};
+          d.filter((r) => r.errorCategory !== "None").forEach((r) => {
+            errors[r.errorCategory] = (errors[r.errorCategory] || 0) + 1;
+          });
+          const errLabels =
+            Object.keys(errors).length > 0
+              ? Object.keys(errors)
+              : ["No Errors"];
+          const errData =
+            Object.keys(errors).length > 0 ? Object.values(errors) : [0];
+          this.charts.errors.data.labels = errLabels;
+          this.charts.errors.data.datasets[0].data = errData;
+          this.charts.errors.data.datasets[0].backgroundColor = [
+            "#ef4444cc",
+            "#f59e0bcc",
+            "#6b7280cc",
+            "#ec4899cc"
+          ];
+          this.charts.errors.update("none");
+
+          // Assignment outcomes
+          const allDetails = d.flatMap((r) => r.details || []);
+          const outcomes = {};
+          allDetails.forEach((det) => {
+            outcomes[det.status] = (outcomes[det.status] || 0) + 1;
+          });
+          const outcomeColors = {
+            Assigned: "#10b981",
+            Failed: "#ef4444",
+            "Skipped (TBD)": "#f59e0b",
+            "Skipped (Already Filled)": "#6b7280"
+          };
+          this.charts.assignments.data.labels = Object.keys(outcomes);
+          this.charts.assignments.data.datasets[0].data =
+            Object.values(outcomes);
+          this.charts.assignments.data.datasets[0].backgroundColor =
+            Object.keys(outcomes).map((o) => outcomeColors[o] || "#3b82f6");
+          this.charts.assignments.update("none");
+        }
+
+        switchTab(tab) {
+          this.currentTab = tab;
+          document.querySelectorAll(".tab-btn").forEach((btn, i) => {
+            btn.classList.toggle(
+              "active",
+              ["logs", "details", "failures"][i] === tab
+            );
+          });
+          this.renderTable();
+        }
+
+        sort(col) {
+          if (this.sortCol === col) {
+            this.sortDir = this.sortDir === "asc" ? "desc" : "asc";
+          } else {
+            this.sortCol = col;
+            this.sortDir = "desc";
+          }
+          this.renderTable();
+        }
+
+        renderTable() {
+          const container = document.getElementById("table-container");
+
+          if (this.filteredData.length === 0) {
+            container.innerHTML =
+              '<div class="empty-state"><h2>No processing logs found</h2><p>Adjust your filters or wait for flow activity.</p></div>';
+            return;
+          }
+
+          if (this.currentTab === "logs") this.renderLogsTable(container);
+          else if (this.currentTab === "details")
+            this.renderDetailsTable(container);
+          else this.renderFailuresTable(container);
+        }
+
+        renderLogsTable(container) {
+          const sorted = [...this.filteredData].sort((a, b) => {
+            const av = a[this.sortCol],
+              bv = b[this.sortCol];
+            const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+            return this.sortDir === "asc" ? cmp : -cmp;
+          });
+
+          const arrow = (col) =>
+            this.sortCol === col
+              ? this.sortDir === "asc"
+                ? " &#9650;"
+                : " &#9660;"
+              : "";
+
+          let html = `<table>
+            <thead><tr>
+                <th onclick="dashboard.sort('id')">Log #${arrow("id")}</th>
+                <th onclick="dashboard.sort('processingDate')">Date${arrow("processingDate")}</th>
+                <th onclick="dashboard.sort('opportunityName')">Opportunity${arrow("opportunityName")}</th>
+                <th onclick="dashboard.sort('processingType')">Type${arrow("processingType")}</th>
+                <th onclick="dashboard.sort('status')">Status${arrow("status")}</th>
+                <th onclick="dashboard.sort('senderName')">Sender${arrow("senderName")}</th>
+                <th>Provided</th>
+                <th>Assigned</th>
+                <th>Open</th>
+                <th onclick="dashboard.sort('errorCategory')">Error${arrow("errorCategory")}</th>
+                <th>Details</th>
+            </tr></thead><tbody>`;
+
+          sorted.forEach((log) => {
+            const statusClass =
+              log.status === "Success"
+                ? "success"
+                : log.status === "Failed"
+                  ? "failed"
+                  : log.status === "Partial Success"
+                    ? "partial"
+                    : "in-progress";
+            const date = new Date(log.processingDate).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+
+            html += `<tr>
+                <td><strong>${log.id}</strong></td>
+                <td>${date}</td>
+                <td>${log.opportunityName}</td>
+                <td>${log.processingType}</td>
+                <td><span class="status-badge ${statusClass}">${log.status}</span></td>
+                <td>${log.senderName || "—"}</td>
+                <td>${log.attendeesProvided}</td>
+                <td>${log.attendeesAssigned}</td>
+                <td>${log.openSlots}</td>
+                <td>${log.errorCategory !== "None" ? '<span class="status-badge failed">' + log.errorCategory + "</span>" : "—"}</td>
+                <td>${log.details.length > 0 ? '<button class="expand-btn" onclick="dashboard.toggleDetails(\'' + log.id + "')\">" + log.details.length + " items</button>" : "—"}</td>
+            </tr>`;
+
+            html += `<tr class="detail-row" id="details-${log.id}" style="display:none"><td colspan="11">`;
+            if (log.details.length > 0) {
+              html += `<table style="width:100%;margin:4px 0"><thead><tr>
+                    <th>Detail #</th><th>Product</th><th>Type</th><th>Extracted Name</th><th>Email</th><th>Status</th><th>Previous</th><th>Error</th>
+                </tr></thead><tbody>`;
+              log.details.forEach((det) => {
+                const dsc =
+                  det.status === "Assigned"
+                    ? "success"
+                    : det.status === "Failed"
+                      ? "failed"
+                      : "skipped";
+                html += `<tr>
+                        <td>${det.id}</td>
+                        <td>${det.productName}</td>
+                        <td>${det.productType}</td>
+                        <td>${det.extractedName}</td>
+                        <td>${det.extractedEmail || "—"}</td>
+                        <td><span class="status-badge ${dsc}">${det.status}</span></td>
+                        <td>${det.previousName || "—"}</td>
+                        <td>${det.error || "—"}</td>
+                    </tr>`;
+              });
+              html += "</tbody></table>";
+            }
+            if (log.errorMessage) {
+              html += `<div style="margin-top:8px;padding:8px 12px;background:#fef2f2;border-radius:6px;font-size:12px;color:#991b1b"><strong>Error:</strong> ${log.errorMessage}</div>`;
+            }
+            html += "</td></tr>";
+          });
+
+          html += "</tbody></table>";
+          container.innerHTML = html;
+        }
+
+        renderDetailsTable(container) {
+          const allDetails = this.filteredData.flatMap((log) =>
+            (log.details || []).map((d) => ({
+              ...d,
+              logId: log.id,
+              opportunityName: log.opportunityName,
+              processingDate: log.processingDate
+            }))
+          );
+
+          if (allDetails.length === 0) {
+            container.innerHTML =
+              '<div class="empty-state"><h2>No assignment details</h2><p>No OLI-level assignment records for the current filters.</p></div>';
+            return;
+          }
+
+          let html = `<table><thead><tr>
+            <th>Log #</th><th>Detail #</th><th>Opportunity</th><th>Product</th><th>Type</th>
+            <th>Extracted Name</th><th>Email</th><th>Status</th><th>Previous Name</th>
+        </tr></thead><tbody>`;
+
+          allDetails.forEach((det) => {
+            const dsc =
+              det.status === "Assigned"
+                ? "success"
+                : det.status === "Failed"
+                  ? "failed"
+                  : "skipped";
+            html += `<tr>
+                <td>${det.logId}</td><td>${det.id}</td><td>${det.opportunityName}</td>
+                <td>${det.productName}</td><td>${det.productType}</td>
+                <td>${det.extractedName}</td><td>${det.extractedEmail || "—"}</td>
+                <td><span class="status-badge ${dsc}">${det.status}</span></td>
+                <td>${det.previousName || "—"}</td>
+            </tr>`;
+          });
+
+          html += "</tbody></table>";
+          html += `<div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">Showing ${allDetails.length} assignment detail records</div>`;
+          container.innerHTML = html;
+        }
+
+        renderFailuresTable(container) {
+          const failures = this.filteredData.filter(
+            (r) => r.status === "Failed" || r.status === "Partial Success"
+          );
+
+          if (failures.length === 0) {
+            container.innerHTML =
+              '<div class="empty-state"><h2>No failures found</h2><p>All processing runs completed successfully.</p></div>';
+            return;
+          }
+
+          let html = `<table><thead><tr>
+            <th>Log #</th><th>Date</th><th>Opportunity</th><th>Error Category</th><th>Error Message</th><th>Products Affected</th>
+        </tr></thead><tbody>`;
+
+          failures.forEach((log) => {
+            const date = new Date(log.processingDate).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+            const failedDetails = log.details.filter(
+              (d) => d.status === "Failed"
+            );
+            html += `<tr>
+                <td><strong>${log.id}</strong></td>
+                <td>${date}</td>
+                <td>${log.opportunityName}</td>
+                <td><span class="status-badge failed">${log.errorCategory}</span></td>
+                <td style="max-width:400px;white-space:normal;font-size:12px">${log.errorMessage || "—"}</td>
+                <td>${failedDetails.length > 0 ? failedDetails.length + " OLIs" : "—"}</td>
+            </tr>`;
+          });
+
+          html += "</tbody></table>";
+          container.innerHTML = html;
+        }
+
+        toggleDetails(logId) {
+          const row = document.getElementById("details-" + logId);
+          row.style.display = row.style.display === "none" ? "" : "none";
+        }
+      }
+
+      const dashboard = new Dashboard(SAMPLE_LOGS);
+
+      // ═══════════════════════════════════════════════════════════════
+      // TO CONNECT TO LIVE SALESFORCE DATA:
+      //
+      // Option 1: Visualforce Page
+      //   - Create a VF page that queries the data and passes it to this HTML
+      //   - Replace SAMPLE_LOGS with: const DATA = {!logsJson};
+      //
+      // Option 2: Lightning Web Component
+      //   - Wrap this dashboard in an LWC
+      //   - Use @wire to query Attendee_Processing_Log__c with child Assignment_Details__r
+      //   - Pass data to the Dashboard class
+      //
+      // Option 3: Connected App / External
+      //   - Use Salesforce REST API to query:
+      //     SELECT Id, Name, Opportunity__r.Name, Processing_Type__c, Status__c,
+      //            Processing_Date__c, Sender_Email__c, Sender_Name__c,
+      //            Total_Registration_Products__c, Attendees_Provided__c,
+      //            Attendees_Assigned__c, Attendees_Not_Assigned__c,
+      //            Open_Slots_Remaining__c, Error_Category__c, Error_Message__c,
+      //            AI_Model_Used__c, Flow_API_Name__c,
+      //            (SELECT Id, Name, Product_Name__c, Product_Type__c,
+      //                    Extracted_Name__c, Extracted_Email__c, Extracted_Phone__c,
+      //                    Assignment_Status__c, Assignment_Error__c,
+      //                    Previous_Attendee_Name__c, Previous_Attendee_Email__c
+      //             FROM Assignment_Details__r)
+      //     FROM Attendee_Processing_Log__c
+      //     ORDER BY Processing_Date__c DESC
+      // ═══════════════════════════════════════════════════════════════
+    </script>
+  </body>
+</html>
