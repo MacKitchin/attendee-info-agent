@@ -525,7 +525,7 @@ Status Message: {!varStatusMessage}</stringValue>
             <targetReference>Generate_Failure_Summary</targetReference>
         </connector>
         <faultConnector>
-            <targetReference>Assign_Fault_Message</targetReference>
+            <targetReference>Assign_Task_Creation_Fault</targetReference>
         </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -567,7 +567,7 @@ Status Message: {!varStatusMessage}</stringValue>
             <targetReference>Create_Follow_Up_Task</targetReference>
         </connector>
         <faultConnector>
-            <targetReference>Assign_Fault_Message</targetReference>
+            <targetReference>Assign_Task_Creation_Fault</targetReference>
         </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -590,7 +590,7 @@ Status Message: {!varStatusMessage}</stringValue>
         <actionName>CreateFollowUpTask</actionName>
         <actionType>apex</actionType>
         <faultConnector>
-            <targetReference>Assign_Fault_Message</targetReference>
+            <targetReference>Assign_Task_Creation_Fault</targetReference>
         </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -640,6 +640,21 @@ Status Message: {!varStatusMessage}</stringValue>
             <targetReference
       >Update_Processing_Log_Failure_Fault</targetReference>
         </connector>
+    </assignments>
+    <assignments>
+        <description
+    >Silently absorbs faults from the follow-up task creation chain to prevent a loop back through Decision_Needs_Task.</description>
+        <name>Assign_Task_Creation_Fault</name>
+        <label>Absorb Task Creation Fault</label>
+        <locationX>314</locationX>
+        <locationY>971</locationY>
+        <assignmentItems>
+            <assignToReference>varStatusMessage</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </assignmentItems>
     </assignments>
     <decisions>
         <name>Decision_Is_Success</name>
@@ -799,6 +814,13 @@ Status Message: {!varStatusMessage}</stringValue>
         <isOutput>false</isOutput>
     </variables>
     <variables>
+        <name>varFormattedContext</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
         <name>varIsSuccess</name>
         <dataType>Boolean</dataType>
         <isCollection>false</isCollection>
@@ -827,11 +849,5 @@ Status Message: {!varStatusMessage}</stringValue>
         <isInput>false</isInput>
         <isOutput>false</isOutput>
     </variables>
-    <variables>
-        <name>varFormattedContext</name>
-        <dataType>String</dataType>
-        <isCollection>false</isCollection>
-        <isInput>false</isInput>
-        <isOutput>false</isOutput>
-    </variables>
+
 </Flow>
