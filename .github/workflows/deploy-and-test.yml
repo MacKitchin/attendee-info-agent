@@ -1,0 +1,29 @@
+name: Deploy & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate to org
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL }}" > auth_url.txt
+          sf org login sfdx-url --sfdx-url-file auth_url.txt --set-default --alias ci-org
+          rm auth_url.txt
+
+      - name: Deploy source
+        run: sf project deploy start --source-dir force-app --target-org ci-org --wait 30
+
+      - name: Run Apex tests
+        run: sf apex run test --target-org ci-org --test-level RunLocalTests --wait 30 --result-format human --code-coverage
