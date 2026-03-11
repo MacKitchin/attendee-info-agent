@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
-    <activeVersionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_6</activeVersionIdentifier>
-    <description>This prompt is used to convert an inbound email reply into a raw JSON list of attendees.</description>
+    <activeVersionIdentifier
+  >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_6</activeVersionIdentifier>
+    <description
+  >This prompt is used to convert an inbound email reply into a raw JSON list of attendees.</description>
     <developerName>Extract_Attendee_Information</developerName>
     <masterLabel>Extract Attendee Information</masterLabel>
     <templateVersions>
@@ -29,7 +31,8 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
         </inputs>
         <primaryModel>sfdc_ai__DefaultOpenAIGPT4OmniMini</primaryModel>
         <status>Published</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</versionIdentifier>
     </templateVersions>
     <templateVersions>
         <content>You are an intelligent assistant for Connect Meetings.
@@ -64,7 +67,8 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
         </inputs>
         <primaryModel>sfdc_ai__DefaultOpenAIGPT4OmniMini</primaryModel>
         <status>Published</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_2</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_2</versionIdentifier>
     </templateVersions>
     <templateVersions>
         <content>You are an intelligent assistant for Connect Meetings.
@@ -89,9 +93,11 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
             <referenceName>Input:EmailMessage</referenceName>
             <required>true</required>
         </inputs>
-        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <primaryModel
+    >sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
         <status>Published</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_3</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_3</versionIdentifier>
     </templateVersions>
     <templateVersions>
         <content>You are an intelligent assistant for Connect Meetings.
@@ -125,9 +131,11 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
             <referenceName>Input:EmailMessage</referenceName>
             <required>true</required>
         </inputs>
-        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <primaryModel
+    >sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
         <status>Published</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_4</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_4</versionIdentifier>
     </templateVersions>
     <templateVersions>
         <content>You are an intelligent assistant for Connect Meetings.
@@ -163,9 +171,11 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
             <referenceName>Input:EmailMessage</referenceName>
             <required>true</required>
         </inputs>
-        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <primaryModel
+    >sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
         <status>Published</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_5</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_5</versionIdentifier>
     </templateVersions>
     <templateVersions>
         <content> You are an intelligent assistant for Connect Meetings.
@@ -184,7 +194,7 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
  2. If the reply follows the structured format, extract event_name, product_type, first_name, last_name, and email from each section.
  3. If the reply is UNSTRUCTURED (plain text list, table, or free-form),extract every person&apos;s first_name, last_name, and email. Set event_name and product_type to empty strings &quot;&quot;.                                                  
  4. BOTH first_name AND email are REQUIRED for each attendee. Skip any entry missing either.                                                          
- 5. The sender MAY be registering themselves as an attendee. If the sender&apos;s name and email appear filled into the attendee template fields, DO extract them — this is valid attendee data. 
+ 5. SELF-REGISTRATION: The sender MAY be registering themselves. Look for phrases like &quot;that will be me&quot;, &quot;the attendee will be myself&quot;, &quot;please register me&quot;, &quot;put me down&quot;, &quot;I'll be the attendee&quot;, &quot;I am the attendee&quot;, or any indication the sender is volunteering themselves as the attendee. When detected, use the From name as first_name/last_name and the From email as email. If the original registration template is visible in the quoted message, extract event_name and product_type from it. Otherwise set them to empty strings.
  6. IGNORE only email signature blocks (job titles, phone numbers, company addresses, legal disclaimers appended at the bottom of the reply). Do NOT treat signature data as attendee registrations.
  7. IGNORE any sections where &quot;Attendee Name:&quot; and &quot;Attendee Email:&quot; are still blank (unfilled template placeholders).                                              
  8. IGNORE email headers (From:, Sent:, To:, Subject:, -----Original Message-----) — these are not attendee data.                                        
@@ -211,9 +221,59 @@ IMPORTANT: Return only the raw JSON string. Do not use markdown formatting, code
             <referenceName>Input:EmailMessage</referenceName>
             <required>true</required>
         </inputs>
-        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <primaryModel
+    >sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
         <status>Published</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_6</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_6</versionIdentifier>
+    </templateVersions>
+    <templateVersions>
+        <content> You are an intelligent assistant for Connect Meetings.
+ Extract event attendee registration details from the email reply below.
+
+ CONTEXT:
+ The sender was asked to reply with attendee names and emails for event
+ registrations. The original email used this structured format:
+                                                                       
+  &lt;number&gt;. Event: &lt;event_name&gt; | Registration Type: &lt;type&gt; | Type: &lt;product_type&gt;
+  Attendee Name: &lt;first_name&gt; &lt;last_name&gt;
+  Attendee Email: &lt;email&gt;
+                               
+ EXTRACTION RULES:
+ 1. Look for filled-in attendee details in both the reply text AND any  quoted/original message content.                                                     
+ 2. If the reply follows the structured format, extract event_name, product_type, first_name, last_name, and email from each section.
+ 3. If the reply is UNSTRUCTURED (plain text list, table, or free-form),extract every person&apos;s first_name, last_name, and email. Set event_name and product_type to empty strings &quot;&quot;.                                                  
+ 4. BOTH first_name AND email are REQUIRED for each attendee. Skip any entry missing either.                                                          
+ 5. SELF-REGISTRATION: The sender MAY be registering themselves. Look for phrases like &quot;that will be me&quot;, &quot;the attendee will be myself&quot;, &quot;please register me&quot;, &quot;put me down&quot;, &quot;I'll be the attendee&quot;, &quot;I am the attendee&quot;, or any indication the sender is volunteering themselves as the attendee. When detected, use the From name as first_name/last_name and the From email as email. If the original registration template is visible in the quoted message, extract event_name and product_type from it. Otherwise set them to empty strings.
+ 6. IGNORE only email signature blocks (job titles, phone numbers, company addresses, legal disclaimers appended at the bottom of the reply). Do NOT treat signature data as attendee registrations.                     
+
+ OUTPUT FORMAT:
+ Return ONLY a raw JSON array. No markdown, no code blocks, no backticks,                                  
+ no explanation, no commentary. Your entire response must be parseable JSON.                                 
+
+ Example:                                                                  
+ [{&quot;event_name&quot;: &quot;MEGA&quot;, &quot;product_type&quot;: &quot;Association&quot;, &quot;first_name&quot;: &quot;Matt&quot;, &quot;last_name&quot;: &quot;Johnson&quot;, &quot;email&quot;: &quot;matt.johnson@informa.com&quot;}] 
+
+ If no valid attendees are found, return exactly: []                                             
+
+ EMAIL DATA:                                                                 
+ Subject: {!$Input:EmailMessage.Subject}
+ From: {!$Input:EmailMessage.FromName} &lt;{!$Input:EmailMessage.FromAddress}&gt;
+ Body:
+ {!$Input:EmailMessage.TextBody}  
+</content>
+        <inputs>
+            <apiName>EmailMessage</apiName>
+            <definition>SOBJECT://EmailMessage</definition>
+            <masterLabel>EmailMessage</masterLabel>
+            <referenceName>Input:EmailMessage</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel
+    >sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <status>Draft</status>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_7</versionIdentifier>
     </templateVersions>
     <type>einstein_gpt__flex</type>
     <visibility>Global</visibility>
