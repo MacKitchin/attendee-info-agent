@@ -318,8 +318,8 @@ private class AttendeeReplyEmailHandlerTest {
       LIMIT 1
     ];
     System.assert(
-      !created.TextBody.startsWith('Please see below.'),
-      'Prompt body should prefer quoted content when top reply is deferral text'
+      created.TextBody.contains('Please see below.'),
+      'Full body should be preserved so AI sees both reply intent and registration context'
     );
     System.assert(
       created.TextBody.contains('Attendee Name: Nikki Gustafson'),
