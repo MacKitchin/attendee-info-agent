@@ -17,6 +17,8 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
   );
   @TestVisible
   private static final String OUTLOOK_REPLY_SEPARATOR = '________________________________';
+  @TestVisible
+  private static final String ORIGINAL_MESSAGE_SEPARATOR = '-----Original Message-----';
   private static final Pattern SEE_BELOW_PATTERN = Pattern.compile(
     '(?i)\\b(please\\s+see\\s+below|see\\s+below|details\\s+below|filled\\s+below|completed\\s+below|populated\\s+below)\\b'
   );
@@ -127,11 +129,24 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
       return '';
     }
 
-    Integer separatorIdx = body.indexOf(OUTLOOK_REPLY_SEPARATOR);
+    // Find the earliest reply separator: Outlook underscores or -----Original Message-----
+    Integer outlookIdx = body.indexOf(OUTLOOK_REPLY_SEPARATOR);
+    Integer origMsgIdx = body.indexOf(ORIGINAL_MESSAGE_SEPARATOR);
+
+    Integer separatorIdx = -1;
+    Integer separatorLen = 0;
+    if (outlookIdx > 0 && (origMsgIdx <= 0 || outlookIdx <= origMsgIdx)) {
+      separatorIdx = outlookIdx;
+      separatorLen = OUTLOOK_REPLY_SEPARATOR.length();
+    } else if (origMsgIdx > 0) {
+      separatorIdx = origMsgIdx;
+      separatorLen = ORIGINAL_MESSAGE_SEPARATOR.length();
+    }
+
     if (separatorIdx > 0) {
       String topReply = body.substring(0, separatorIdx).trim();
       String quotedReply = body
-        .substring(separatorIdx + OUTLOOK_REPLY_SEPARATOR.length())
+        .substring(separatorIdx + separatorLen)
         .trim();
 
       // Preserve current behavior for normal replies, but recover attendee data

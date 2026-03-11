@@ -332,6 +332,64 @@ private class AttendeeReplyEmailHandlerTest {
   }
 
   /**
+   * @description When the email body uses -----Original Message----- as the reply
+   * separator (common in non-Outlook clients), only the top reply should be stored.
+   */
+  @IsTest
+  static void testOriginalMessageSeparator_topReplyKept() {
+    Messaging.InboundEmail email = new Messaging.InboundEmail();
+    email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
+    email.fromAddress = 'signer@example.com';
+    email.fromName = 'Test Signer';
+    email.toAddresses = new List<String>{ 'attendeeinfo@informa.com' };
+    email.plainTextBody =
+      'Jen Henkel, DeVos Place Convention Center\n' +
+      'jhenkel@grandrapidsvenues.com\n\n' +
+      'Mary\n\n' +
+      'Mary Manier, Vice President of Sales\n' +
+      '616-233-3554\n\n' +
+      '-----Original Message-----\n' +
+      'From: Attendee Information <attendeeinfo@informa.com>\n' +
+      'Subject: Action Required: Attendee Details for your Event Registrations\n\n' +
+      'Hi Mary,\n\n' +
+      '1. Event: MEGA | Registration Type: Non-Appointment Taker | Type: Association\n' +
+      'Attendee Name:\nAttendee Email:\n';
+
+    Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+    envelope.fromAddress = 'signer@example.com';
+
+    AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
+
+    Test.startTest();
+    Messaging.InboundEmailResult result = handler.handleInboundEmail(
+      email,
+      envelope
+    );
+    Test.stopTest();
+
+    System.assertEquals(true, result.success, 'Handler should succeed');
+
+    EmailMessage created = [
+      SELECT TextBody
+      FROM EmailMessage
+      WHERE Incoming = TRUE
+      LIMIT 1
+    ];
+    System.assert(
+      !created.TextBody.contains('-----Original Message-----'),
+      'Original message separator should be stripped'
+    );
+    System.assert(
+      !created.TextBody.contains('Attendee Name:'),
+      'Original template with empty fields should be stripped'
+    );
+    System.assert(
+      created.TextBody.contains('jhenkel@grandrapidsvenues.com'),
+      'Attendee email from top reply should be preserved'
+    );
+  }
+
+  /**
    * @description HTML entities from Outlook (e.g. &amp; &lt; &#124;) should be decoded
    * in the stored TextBody so the Einstein prompt template can process it.
    */
