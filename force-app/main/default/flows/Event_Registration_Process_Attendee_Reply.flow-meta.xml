@@ -696,6 +696,13 @@ Status Message: {!varStatusMessage}</stringValue>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>varFinalStatus</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>varFinalStatus</leftValueReference>
                 <operator>NotEqualTo</operator>
                 <rightValue>
                     <stringValue>Success</stringValue>
