@@ -658,6 +658,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
    * Uses JSON.deserializeUntyped to validate structure explicitly.
    */
   private static List<Attendee> parseAttendees(String jsonString) {
+    jsonString = stripMarkdownCodeFence(jsonString);
     Object root = JSON.deserializeUntyped(jsonString);
     if (!(root instanceof List<Object>)) {
       throw new ProcessException('JSON must be an array.');
@@ -695,5 +696,26 @@ public with sharing class ProcessAppointmentTakerAttendees {
       parsedAttendees.add(new Attendee(firstName, lastName, email, eventName, productType));
     }
     return parsedAttendees;
+  }
+
+  /**
+   * @description Strips markdown code fences (```json ... ``` or ``` ... ```)
+   *              that AI models sometimes wrap around JSON output despite being
+   *              instructed not to.
+   */
+  @TestVisible
+  private static String stripMarkdownCodeFence(String input) {
+    if (String.isBlank(input)) {
+      return input;
+    }
+    String trimmed = input.trim();
+    if (!trimmed.startsWith('`')) {
+      return trimmed;
+    }
+    // Remove opening fence: ```json or ```
+    trimmed = trimmed.replaceFirst('(?s)^```[a-zA-Z]*\\s*', '');
+    // Remove closing fence: ```
+    trimmed = trimmed.replaceFirst('(?s)\\s*```\\s*$', '');
+    return trimmed.trim();
   }
 }

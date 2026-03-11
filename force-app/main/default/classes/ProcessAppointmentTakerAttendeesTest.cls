@@ -785,4 +785,47 @@ private class ProcessAppointmentTakerAttendeesTest {
       'Null request should be failure'
     );
   }
+
+  /**
+   * @description stripMarkdownCodeFence removes ```json fences from AI output
+   */
+  @IsTest
+  static void testStripMarkdownCodeFence() {
+    String raw = '[{"first_name":"Jane"}]';
+
+    // No fence — unchanged
+    System.assertEquals(
+      raw,
+      ProcessAppointmentTakerAttendees.stripMarkdownCodeFence(raw),
+      'No fence should pass through unchanged'
+    );
+
+    // ```json fence
+    String fenced = '```json\n' + raw + '\n```';
+    System.assertEquals(
+      raw,
+      ProcessAppointmentTakerAttendees.stripMarkdownCodeFence(fenced),
+      'Should strip ```json fence'
+    );
+
+    // ``` fence without language tag
+    String fencedNoLang = '```\n' + raw + '\n```';
+    System.assertEquals(
+      raw,
+      ProcessAppointmentTakerAttendees.stripMarkdownCodeFence(fencedNoLang),
+      'Should strip ``` fence without language tag'
+    );
+
+    // Blank input
+    System.assertEquals(
+      null,
+      ProcessAppointmentTakerAttendees.stripMarkdownCodeFence(null),
+      'Null should return null'
+    );
+    System.assertEquals(
+      '',
+      ProcessAppointmentTakerAttendees.stripMarkdownCodeFence(''),
+      'Empty should return empty'
+    );
+  }
 }
