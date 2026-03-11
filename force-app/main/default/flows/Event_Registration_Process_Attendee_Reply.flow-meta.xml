@@ -63,6 +63,9 @@ Status Message: {!varStatusMessage}</stringValue>
                 <booleanValue>true</booleanValue>
             </value>
         </inputParameters>
+        <connector>
+            <targetReference>Decision_Needs_Task</targetReference>
+        </connector>
         <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
     </actionCalls>
@@ -129,6 +132,9 @@ Status Message: {!varStatusMessage}</stringValue>
                 <booleanValue>true</booleanValue>
             </value>
         </inputParameters>
+        <connector>
+            <targetReference>Decision_Needs_Task</targetReference>
+        </connector>
         <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
     </actionCalls>
@@ -506,6 +512,116 @@ Status Message: {!varStatusMessage}</stringValue>
         <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
         <offset>0</offset>
     </actionCalls>
+    <actionCalls>
+        <description
+    >Queries assignment detail records and formats them for the AI summary prompt.</description>
+        <name>Build_Failure_Context</name>
+        <label>Build Failure Context</label>
+        <locationX>50</locationX>
+        <locationY>863</locationY>
+        <actionName>BuildFailureContext</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Generate_Failure_Summary</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>statusMessage</name>
+            <value>
+                <elementReference>varStatusMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>opportunityName</name>
+            <value>
+                <elementReference
+        >Get_Opportunity_Details.Name</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>BuildFailureContext</nameSegment>
+        <offset>0</offset>
+        <outputParameters>
+            <assignToReference>varFormattedContext</assignToReference>
+            <name>formattedContext</name>
+        </outputParameters>
+    </actionCalls>
+    <actionCalls>
+        <description
+    >Calls the AI prompt template to generate a plain-English failure summary.</description>
+        <name>Generate_Failure_Summary</name>
+        <label>Generate Failure Summary</label>
+        <locationX>50</locationX>
+        <locationY>917</locationY>
+        <actionName>Attendee_Assignment_Failure_Summary</actionName>
+        <actionType>generatePromptResponse</actionType>
+        <connector>
+            <targetReference>Create_Follow_Up_Task</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>Input:FailureContext</name>
+            <value>
+                <elementReference>varFormattedContext</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Attendee_Assignment_Failure_Summary</nameSegment>
+        <offset>0</offset>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+    <actionCalls>
+        <description
+    >Creates a Salesforce Task assigned to Mac Kitchin with the AI-generated failure summary.</description>
+        <name>Create_Follow_Up_Task</name>
+        <label>Create Follow-Up Task</label>
+        <locationX>50</locationX>
+        <locationY>971</locationY>
+        <actionName>CreateFollowUpTask</actionName>
+        <actionType>apex</actionType>
+        <faultConnector>
+            <targetReference>Assign_Fault_Message</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>opportunityId</name>
+            <value>
+                <elementReference>$Record.RelatedToId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>aiSummary</name>
+            <value>
+                <elementReference
+        >Generate_Failure_Summary.promptResponse</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>opportunityName</name>
+            <value>
+                <elementReference
+        >Get_Opportunity_Details.Name</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>statusMessage</name>
+            <value>
+                <elementReference>varStatusMessage</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>CreateFollowUpTask</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
     <assignments>
@@ -550,6 +666,30 @@ Status Message: {!varStatusMessage}</stringValue>
         >Update_Processing_Log_Success_Result</targetReference>
             </connector>
             <label>Success</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description
+    >Checks whether a follow-up Task should be created. Fires for Partial Success and Failed outcomes.</description>
+        <name>Decision_Needs_Task</name>
+        <label>Needs Follow-Up Task?</label>
+        <locationX>176</locationX>
+        <locationY>755</locationY>
+        <defaultConnectorLabel>No Task Needed</defaultConnectorLabel>
+        <rules>
+            <name>Outcome_Needs_Task</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>varFinalStatus</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Success</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Build_Failure_Context</targetReference>
+            </connector>
+            <label>Task Needed</label>
         </rules>
     </decisions>
     <description
@@ -682,6 +822,13 @@ Status Message: {!varStatusMessage}</stringValue>
     </variables>
     <variables>
         <name>varStatusMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varFormattedContext</name>
         <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>false</isInput>
