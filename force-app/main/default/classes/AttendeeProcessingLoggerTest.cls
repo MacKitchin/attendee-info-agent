@@ -39,6 +39,8 @@ private class AttendeeProcessingLoggerTest {
     input.outgoingEmailId = '02s000000000002AAA';
     input.senderEmail = 'test@example.com';
     input.senderName = 'Test Sender';
+    input.emailSubject = 'Action Required: Attendee Details';
+    input.recipients = 'signer@example.com';
     input.totalRegistrationProducts = 3;
     input.attendeesProvided = 0;
     input.attendeesAssigned = 0;
@@ -79,6 +81,8 @@ private class AttendeeProcessingLoggerTest {
         Processing_Date__c,
         Outgoing_Email_Id__c,
         Sender_Email__c,
+        Email_Subject__c,
+        Recipients__c,
         Total_Registration_Products__c,
         Flow_API_Name__c
       FROM Attendee_Processing_Log__c
@@ -90,6 +94,11 @@ private class AttendeeProcessingLoggerTest {
     System.assertNotEquals(null, log.Processing_Date__c);
     System.assertEquals('02s000000000002AAA', log.Outgoing_Email_Id__c);
     System.assertEquals('test@example.com', log.Sender_Email__c);
+    System.assertEquals(
+      'Action Required: Attendee Details',
+      log.Email_Subject__c
+    );
+    System.assertEquals('signer@example.com', log.Recipients__c);
     System.assertEquals(3, log.Total_Registration_Products__c);
   }
 
@@ -321,5 +330,48 @@ private class AttendeeProcessingLoggerTest {
     System.assertEquals('Failed', log.Status__c);
     System.assertEquals('JSON Parse', log.Error_Category__c);
     System.assert(log.Error_Message__c.contains('invalid JSON'));
+  }
+
+  @isTest
+  static void testUpdateProcessingLog_ClearsErrorFieldsOnBlankInput() {
+    Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+
+    AttendeeProcessingLogger.ProcessingLogInput logInput = new AttendeeProcessingLogger.ProcessingLogInput();
+    logInput.opportunityId = opp.Id;
+    logInput.status = 'Failed';
+    logInput.errorMessage = 'Initial failure';
+    logInput.errorCategory = 'Flow Error';
+    logInput.emailSubject = 'Original Subject';
+    logInput.recipients = 'old@example.com';
+    List<AttendeeProcessingLogger.ProcessingLogOutput> logOutputs = AttendeeProcessingLogger.createProcessingLog(
+      new List<AttendeeProcessingLogger.ProcessingLogInput>{ logInput }
+    );
+
+    AttendeeProcessingLogUpdater.UpdateLogInput updateInput = new AttendeeProcessingLogUpdater.UpdateLogInput();
+    updateInput.processingLogId = logOutputs[0].processingLogId;
+    updateInput.status = 'Success';
+    updateInput.errorMessage = '';
+    updateInput.errorCategory = '';
+    updateInput.emailSubject = '';
+    updateInput.recipients = '';
+
+    Test.startTest();
+    List<AttendeeProcessingLogUpdater.UpdateLogOutput> outputs = AttendeeProcessingLogUpdater.updateProcessingLog(
+      new List<AttendeeProcessingLogUpdater.UpdateLogInput>{ updateInput }
+    );
+    Test.stopTest();
+
+    System.assertEquals(true, outputs[0].success);
+
+    Attendee_Processing_Log__c log = [
+      SELECT Status__c, Error_Message__c, Error_Category__c, Email_Subject__c, Recipients__c
+      FROM Attendee_Processing_Log__c
+      WHERE Id = :logOutputs[0].processingLogId
+    ];
+    System.assertEquals('Success', log.Status__c);
+    System.assertEquals(null, log.Error_Message__c);
+    System.assertEquals(null, log.Error_Category__c);
+    System.assertEquals(null, log.Email_Subject__c);
+    System.assertEquals(null, log.Recipients__c);
   }
 }

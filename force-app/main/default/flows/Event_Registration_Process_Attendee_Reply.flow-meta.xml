@@ -183,6 +183,18 @@ Status Message: {!varStatusMessage}</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <elementReference>$Record.Subject</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipients</name>
+            <value>
+                <elementReference>$Record.ToAddress</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
             <name>flowApiName</name>
             <value>
                 <stringValue

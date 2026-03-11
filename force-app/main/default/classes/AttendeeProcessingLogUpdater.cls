@@ -52,6 +52,12 @@ public with sharing class AttendeeProcessingLogUpdater {
     @InvocableVariable(label='AI Model Used')
     public String aiModelUsed;
 
+    @InvocableVariable(label='Email Subject')
+    public String emailSubject;
+
+    @InvocableVariable(label='Recipients')
+    public String recipients;
+
     @InvocableVariable(label='Error Message')
     public String errorMessage;
 
@@ -96,15 +102,19 @@ public with sharing class AttendeeProcessingLogUpdater {
         if (input.openSlotsRemaining != null)
           log.Open_Slots_Remaining__c = input.openSlotsRemaining;
         if (input.aiPromptInput != null)
-          log.AI_Prompt_Input__c = input.aiPromptInput;
+          log.AI_Prompt_Input__c = blankStringToNull(input.aiPromptInput);
         if (input.aiRawResponse != null)
-          log.AI_Raw_Response__c = input.aiRawResponse;
+          log.AI_Raw_Response__c = blankStringToNull(input.aiRawResponse);
         if (input.aiModelUsed != null)
-          log.AI_Model_Used__c = input.aiModelUsed;
+          log.AI_Model_Used__c = blankStringToNull(input.aiModelUsed);
+        if (input.emailSubject != null)
+          log.Email_Subject__c = blankStringToNull(input.emailSubject);
+        if (input.recipients != null)
+          log.Recipients__c = blankStringToNull(input.recipients);
         if (input.errorMessage != null)
-          log.Error_Message__c = input.errorMessage;
+          log.Error_Message__c = blankStringToNull(input.errorMessage);
         if (input.errorCategory != null)
-          log.Error_Category__c = input.errorCategory;
+          log.Error_Category__c = blankStringToNull(input.errorCategory);
 
         update log;
 
@@ -116,5 +126,9 @@ public with sharing class AttendeeProcessingLogUpdater {
       outputs.add(output);
     }
     return outputs;
+  }
+
+  private static String blankStringToNull(String value) {
+    return String.isBlank(value) ? null : value;
   }
 }

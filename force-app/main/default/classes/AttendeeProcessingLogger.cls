@@ -59,6 +59,12 @@ public with sharing class AttendeeProcessingLogger {
     @InvocableVariable(label='Sender Name')
     public String senderName;
 
+    @InvocableVariable(label='Email Subject')
+    public String emailSubject;
+
+    @InvocableVariable(label='Recipients')
+    public String recipients;
+
     @InvocableVariable(label='Total Registration Products')
     public Decimal totalRegistrationProducts;
 
@@ -138,6 +144,8 @@ public with sharing class AttendeeProcessingLogger {
         log.Outgoing_Email_Id__c = input.outgoingEmailId;
         log.Sender_Email__c = input.senderEmail;
         log.Sender_Name__c = input.senderName;
+        log.Email_Subject__c = input.emailSubject;
+        log.Recipients__c = input.recipients;
         log.Total_Registration_Products__c = input.totalRegistrationProducts;
         log.Attendees_Provided__c = input.attendeesProvided;
         log.Attendees_Assigned__c = input.attendeesAssigned;

@@ -1,70 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <name>Action_Send_Completed_Email</name>
-        <label>Registration Completed Email</label>
-        <locationX>50</locationX>
-        <locationY>1247</locationY>
-        <actionName>emailSimple</actionName>
-        <actionType>emailSimple</actionType>
-        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <inputParameters>
-            <name>emailAddresses</name>
-            <value>
-                <elementReference
-        >$Record.Signer_Contact__r.Email</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>senderType</name>
-            <value>
-                <inputConfiguratorMode>Custom</inputConfiguratorMode>
-                <stringValue>OrgWideEmailAddress</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>senderAddress</name>
-            <value>
-                <inputConfiguratorMode>Custom</inputConfiguratorMode>
-                <stringValue>attendeeinfo@informa.com</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailSubject</name>
-            <value>
-                <stringValue>Registration Details for your Event</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailBody</name>
-            <value>
-                <inputConfiguratorMode>Custom</inputConfiguratorMode>
-                <stringValue
-        >&lt;p&gt;Hi {!$Record.Signer_Contact__r.FirstName},&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Thank you! All event registrations have been assigned to your attendees.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Best,&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 34, 68); font-size: 12px;&quot;&gt;Connect Meetings Team&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&lt;img src=&quot;//:0&quot;&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(0, 34, 68); font-size: 10.5pt; font-family: &amp;quot;Calibri Light&amp;quot;, sans-serif;&quot;&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://www.informaconnect.com/&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot; style=&quot;color: rgb(94, 83, 215); font-size: 12px;&quot;&gt;&lt;u&gt;www.informaconnect.com&lt;/u&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 11pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(99, 117, 130); font-size: 8pt; font-family: Calibri, sans-serif;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;strong style=&quot;color: rgb(99, 117, 130); font-size: 9px;&quot;&gt;Informa PLC | Registered in England &amp;amp; Wales No. 8860726 | 5&amp;nbsp;Howick&amp;nbsp;Place&amp;nbsp;| London&amp;nbsp;| SW1P 1WG&lt;/strong&gt;&lt;/p&gt;</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>sendRichBody</name>
-            <value>
-                <booleanValue>true</booleanValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>relatedRecordId</name>
-            <value>
-                <elementReference>$Record.Id</elementReference>
-            </value>
-        </inputParameters>
-        <nameSegment>emailSimple</nameSegment>
-        <offset>0</offset>
-    </actionCalls>
-    <actionCalls>
         <name>Action_Send_Follow_Up_Email</name>
         <label>Send Follow Up Email</label>
         <locationX>314</locationX>
         <locationY>1355</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
+        <connector>
+            <targetReference>Update_Follow_Up_Processing_Log_Success</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Assign_Follow_Up_Fault_Message</targetReference>
+        </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>emailAddresses</name>
@@ -128,8 +76,142 @@
         <offset>0</offset>
         <versionString>1.0.1</versionString>
     </actionCalls>
+    <actionCalls>
+        <name>Create_Follow_Up_Processing_Log</name>
+        <label>Create Follow Up Processing Log</label>
+        <locationX>314</locationX>
+        <locationY>1301</locationY>
+        <actionName>AttendeeProcessingLogger</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Action_Send_Follow_Up_Email</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>opportunityId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>processingType</name>
+            <value>
+                <stringValue>Outbound Email</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <stringValue>In Progress</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipients</name>
+            <value>
+                <elementReference>$Record.Signer_Contact__r.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Action Required: Attendee Details for your Event Registrations [REG:{!$Record.Id}]</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>totalRegistrationProducts</name>
+            <value>
+                <elementReference>varTotalCount</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>flowApiName</name>
+            <value>
+                <stringValue>Appointment_Taker_Send_Registration_Emails</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogger</nameSegment>
+        <offset>0</offset>
+        <outputParameters>
+            <assignToReference>varProcessingLogId</assignToReference>
+            <name>processingLogId</name>
+        </outputParameters>
+    </actionCalls>
+    <actionCalls>
+        <name>Update_Follow_Up_Processing_Log_Failure</name>
+        <label>Update Follow Up Processing Log Failure</label>
+        <locationX>500</locationX>
+        <locationY>1463</locationY>
+        <actionName>AttendeeProcessingLogUpdater</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <stringValue>Failed</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorMessage</name>
+            <value>
+                <elementReference>varFaultMessage</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>errorCategory</name>
+            <value>
+                <stringValue>Email Send</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Update_Follow_Up_Processing_Log_Success</name>
+        <label>Update Follow Up Processing Log Success</label>
+        <locationX>314</locationX>
+        <locationY>1463</locationY>
+        <actionName>AttendeeProcessingLogUpdater</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>processingLogId</name>
+            <value>
+                <elementReference>varProcessingLogId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>status</name>
+            <value>
+                <stringValue>Success</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>AttendeeProcessingLogUpdater</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
     <apiVersion>62.0</apiVersion>
     <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <assignments>
+        <name>Assign_Follow_Up_Fault_Message</name>
+        <label>Capture Follow Up Fault Message</label>
+        <locationX>500</locationX>
+        <locationY>1409</locationY>
+        <assignmentItems>
+            <assignToReference>varFaultMessage</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Update_Follow_Up_Processing_Log_Failure</targetReference>
+        </connector>
+    </assignments>
     <assignments>
         <name>Assign_Append_Footer</name>
         <label>Append Email Footer</label>
@@ -146,11 +228,11 @@ www.informaconnect.com
 
 This electronic message and all contents transmitted with it are confidential and may be privileged. They are intended solely for the addressee. If you are not the intended recipient, you are hereby notified that any disclosure, distribution, copying or use of this message or taking any action in reliance on the contents of it is strictly prohibited. If you have received this electronic message in error, please destroy it immediately, and notify the sender.
 
-Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | London | SW1P 1WG</stringValue>
+        Informa PLC | Registered in England &amp; Wales No. 8860726 | 5 Howick Place | London | SW1P 1WG</stringValue>
             </value>
         </assignmentItems>
         <connector>
-            <targetReference>Action_Send_Follow_Up_Email</targetReference>
+            <targetReference>Create_Follow_Up_Processing_Log</targetReference>
         </connector>
     </assignments>
     <assignments>
@@ -292,29 +374,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         <label>Are all attendees registered?</label>
         <locationX>314</locationX>
         <locationY>1139</locationY>
-        <defaultConnectorLabel>No AT Products</defaultConnectorLabel>
-        <rules>
-            <name>Outcome_All_Registered</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>varMissingCount</leftValueReference>
-                <operator>EqualTo</operator>
-                <rightValue>
-                    <numberValue>0.0</numberValue>
-                </rightValue>
-            </conditions>
-            <conditions>
-                <leftValueReference>varTotalCount</leftValueReference>
-                <operator>GreaterThan</operator>
-                <rightValue>
-                    <numberValue>0.0</numberValue>
-                </rightValue>
-            </conditions>
-            <connector>
-                <targetReference>Action_Send_Completed_Email</targetReference>
-            </connector>
-            <label>All Registered</label>
-        </rules>
+        <defaultConnectorLabel>No Follow Up Needed</defaultConnectorLabel>
         <rules>
             <name>Outcome_Missing_Attendees</name>
             <conditionLogic>and</conditionLogic>
@@ -373,7 +433,7 @@ Thank you for your purchase! Please reply to this email with the attendee name a
         </rules>
     </decisions>
     <description
-  >Sends registration emails when Opportunity moves to Closed Won with supported attendee-registration products. Counts missing attendee info and sends appropriate follow-up or confirmation email to the Signer Contact.</description>
+  >Sends follow-up registration emails when Opportunity moves to Closed Won with supported attendee-registration products and attendee details are still missing. Creates outbound processing logs and records email send failures.</description>
     <environments>Default</environments>
     <formulas>
         <name>Formula_Registration_Type</name>
@@ -518,6 +578,20 @@ IF({!Loop_OLIs.Product2Id} = &quot;01t4X000004U148QAC&quot;, &quot;Marketer&quot
         <value>
             <numberValue>0.0</numberValue>
         </value>
+    </variables>
+    <variables>
+        <name>varFaultMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varProcessingLogId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
     </variables>
     <variables>
         <name>varTotalCount</name>
