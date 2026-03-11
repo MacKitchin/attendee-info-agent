@@ -62,6 +62,11 @@ private class CreateFollowUpTaskTest {
 
     System.assertEquals(opp.Id, createdTask.WhatId, 'WhatId should be the opportunity');
     System.assertEquals(
+      UserInfo.getUserId(),
+      createdTask.OwnerId,
+      'OwnerId should be assigned (running user in test org)'
+    );
+    System.assertEquals(
       Date.today().addDays(30),
       createdTask.ActivityDate,
       'ActivityDate should be today + 30'
