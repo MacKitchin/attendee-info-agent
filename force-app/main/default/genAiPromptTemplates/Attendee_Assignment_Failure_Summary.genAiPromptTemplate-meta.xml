@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <activeVersionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_2</activeVersionIdentifier>
+    <description>Generates a plain-English summary of attendee assignment failures for use as a Salesforce Task description.</description>
+    <developerName>Attendee_Assignment_Failure_Summary</developerName>
+    <masterLabel>Attendee Assignment Failure Summary</masterLabel>
+    <templateVersions>
+        <content>You are an operations assistant for Connect Meetings event registrations.
+
+Your task is to write a clear, plain-English summary of an attendee assignment processing run that had failures. This summary will be placed into a Salesforce Task description for a human operator to review.
+
+INSTRUCTIONS:
+1. Read the structured data below carefully.
+2. Write a concise summary that explains:
+   - How many attendees were provided and how many were successfully assigned
+   - Who was assigned successfully (if anyone), including their name, email, event, and product type
+   - Who could NOT be assigned, with a plain-English explanation of WHY each one failed
+3. For system errors (DML, validation rule exceptions), translate the technical error into plain English. For example:
+   - &quot;No available open registration slot for attendee&quot; means there were more attendees than open registration line items on the opportunity
+   - &quot;FIELD_CUSTOM_VALIDATION_EXCEPTION&quot; means a validation rule on the record prevented the update
+4. End with a brief recommendation of what the operator should do next (e.g., add more registration products, manually assign the remaining attendees, check validation rules)
+
+OUTPUT FORMAT:
+- Write clean prose suitable for a Salesforce Task description
+- Do NOT use markdown, code blocks, backticks, or special formatting
+- Use plain dashes (-) for list items
+- Keep it between 150 and 400 words
+- Be factual and specific — include names and emails
+
+ASSIGNMENT DATA:
+{!$Input:FailureContext}
+</content>
+        <inputs>
+            <apiName>FailureContext</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Failure Context</masterLabel>
+            <referenceName>Input:FailureContext</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <status>Published</status>
+        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</versionIdentifier>
+    </templateVersions>
+    <templateVersions>
+        <content>You are an operations assistant for Connect Meetings event registrations.
+
+Your task is to write a clear, plain-English summary of an attendee assignment processing run that had failures. This summary will be placed into a Salesforce Task description for a human operator to review.
+
+INSTRUCTIONS:
+1. Read the structured data below carefully.
+2. Write a concise summary that explains:
+   - How many attendees were provided and how many were successfully assigned
+   - Who was assigned successfully (if anyone), including their name, email, event, and product type
+   - Who could NOT be assigned, with a plain-English explanation of WHY each one failed
+3. For system errors (DML, validation rule exceptions), translate the technical error into plain English. For example:
+   - &quot;No available open registration slot for attendee&quot; means there were more attendees than open registration line items on the opportunity
+   - &quot;FIELD_CUSTOM_VALIDATION_EXCEPTION&quot; means a validation rule on the record prevented the update
+4. End with a brief recommendation of what the operator should do next (e.g., add more registration products, manually assign the remaining attendees, check validation rules)
+
+OUTPUT FORMAT:
+- Write clean prose suitable for a Salesforce Task description
+- Do NOT use markdown, code blocks, backticks, or special formatting
+- Use plain dashes (-) for list items when listing attendees or action steps
+- Keep it between 100 and 200 words
+- Be factual and specific — include names and emails
+
+ASSIGNMENT DATA:
+{!$Input:FailureContext}
+</content>
+        <inputs>
+            <apiName>FailureContext</apiName>
+            <definition>primitive://String</definition>
+            <masterLabel>Failure Context</masterLabel>
+            <referenceName>Input:FailureContext</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <status>Published</status>
+        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_2</versionIdentifier>
+    </templateVersions>
+    <type>einstein_gpt__flex</type>
+    <visibility>Global</visibility>
+</GenAiPromptTemplate>

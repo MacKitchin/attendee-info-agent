@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_aeops_informa_com_for_changed_start_date</name>
+        <label>Email alert to InformaEngage, aeops@informa.com, for changed start date</label>
+        <locationX>578</locationX>
+        <locationY>539</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_aeops_informa_com_for_changed_start_date</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>Did_net_price_change_for_aeops_informa_com</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_aeops_informa_com_for_changed_start_date</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_aeops_informa_com_for_changed_total_price</name>
+        <label>Email alert to InformaEngage, aeops@informa.com, for changed total price</label>
+        <locationX>578</locationX>
+        <locationY>839</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_aeops_informa_com_for_changed_total_price</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_aeops_informa_com_for_changed_total_price</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_data_marketing_orders_informa_for_changed_start</name>
+        <label>Email alert to InformaEngage, data-marketing-orders@informa, for changed start</label>
+        <locationX>1106</locationX>
+        <locationY>539</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_data_marketing_orders_informa_com_for_changed_start</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>Did_net_price_change_for_data_marketing_orders_informa_com</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_data_marketing_orders_informa_com_for_changed_start</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_data_marketing_orders_informa_for_changed_total</name>
+        <label>Email alert to InformaEngage, data-marketing-orders@informa, for changed total</label>
+        <locationX>1106</locationX>
+        <locationY>839</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_data_marketing_orders_informa_com_for_changed_total</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_data_marketing_orders_informa_com_for_changed_total</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_start_date</name>
+        <label>Email alert to InformaEngage, EngageQATeam@informa.com, for changed start date</label>
+        <locationX>50</locationX>
+        <locationY>539</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_start_date</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>Did_net_price_change_for_EngageQATeam_informa_com</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_start_date</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_total_price</name>
+        <label>Email alert to InformaEngage, EngageQATeam@informa.com, for changed total price</label>
+        <locationX>50</locationX>
+        <locationY>839</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_total_price</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_total_price</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>53.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Did_net_price_change_for_aeops_informa_com</name>
+        <label>Did net price change for aeops@informa.com?</label>
+        <locationX>710</locationX>
+        <locationY>731</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Net_Price_changed_for_aeops_informa_com</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.UnitPrice</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_aeops_informa_com_for_changed_total_price</targetReference>
+            </connector>
+            <label>Net Price changed for aeops@informa.com</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Did_net_price_change_for_data_marketing_orders_informa_com</name>
+        <label>Did net price change for data-marketing-orders@informa.com?</label>
+        <locationX>1238</locationX>
+        <locationY>731</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Net_Price_changed_for_data_marketing_orders_informa_com</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.UnitPrice</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_data_marketing_orders_informa_for_changed_total</targetReference>
+            </connector>
+            <label>Net Price changed for data-marketing-orders@informa.com</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Did_net_price_change_for_EngageQATeam_informa_com</name>
+        <label>Did net price change for EngageQATeam@informa.com?</label>
+        <locationX>182</locationX>
+        <locationY>731</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Net_price_changed_for_EngageQATeam_informa_com</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.UnitPrice</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_total_price</targetReference>
+            </connector>
+            <label>Net price changed for EngageQATeam@informa.com</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Did_start_date_change_for_aeops_informa_com</name>
+        <label>Did start date change for aeops@informa.com?</label>
+        <locationX>710</locationX>
+        <locationY>431</locationY>
+        <defaultConnector>
+            <targetReference>Did_net_price_change_for_aeops_informa_com</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Contracted_Start_Date_changed_for_aeops_informa_com</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.ServiceDate</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_aeops_informa_com_for_changed_start_date</targetReference>
+            </connector>
+            <label>Contracted Start Date changed for aeops@informa.com</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Did_start_date_change_for_data_marketing_orders_informa_com</name>
+        <label>Did start date change for data-marketing-orders@informa.com?</label>
+        <locationX>1238</locationX>
+        <locationY>431</locationY>
+        <defaultConnector>
+            <targetReference>Did_net_price_change_for_data_marketing_orders_informa_com</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Contracted_Start_Date_changed_for_data_marketing_orders_informa_com</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.ServiceDate</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_data_marketing_orders_informa_for_changed_start</targetReference>
+            </connector>
+            <label>Contracted Start Date changed for data-marketing-orders@informa.com</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Did_start_date_change_for_EngageQATeam_informa_com</name>
+        <label>Did start date change for EngageQATeam@informa.com?</label>
+        <locationX>182</locationX>
+        <locationY>431</locationY>
+        <defaultConnector>
+            <targetReference>Did_net_price_change_for_EngageQATeam_informa_com</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Contracted_Start_Date_changed_for_EngageQATeam_informa_com</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.ServiceDate</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_changed_start_date</targetReference>
+            </connector>
+            <label>Contracted Start Date changed for EngageQATeam@informa.com</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Which_Opportunity_Product</name>
+        <label>Which Opportunity Product</label>
+        <locationX>908</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>For_EngageQATeam_informa_com</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BizBash Buzz Spotlight</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BizBash Buzz Newsletter</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BizBash Sports Newsletter</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Content Marketing</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Survey</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Webinar</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>White Paper</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Did_start_date_change_for_EngageQATeam_informa_com</targetReference>
+            </connector>
+            <label>For EngageQATeam@informa.com</label>
+        </rules>
+        <rules>
+            <name>For_aeops_informa_com</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Banner Retargeting</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Connected TV</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Content Activation</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Pre-Roll Video</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Social Media Retargeting</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Online Radio</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Event Targeting</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Did_start_date_change_for_aeops_informa_com</targetReference>
+            </connector>
+            <label>For aeops@informa.com</label>
+        </rules>
+        <rules>
+            <name>For_data_marketing_orders_informa_com</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Dedicated Email</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Tradeshow Email</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Did_start_date_change_for_data_marketing_orders_informa_com</targetReference>
+            </connector>
+            <label>For data-marketing-orders@informa.com</label>
+        </rules>
+    </decisions>
+    <description>We are tracking three different scenarios
+1. the contracted start date has changed
+2. the total amount on the product has changed
+3. the product is cancelled because the whole opportunity was cancelled</description>
+    <environments>Default</environments>
+    <interviewLabel>Email alert to InformaEngage when a product is changed after closed/won {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Email alert to InformaEngage when a product is changed after closed/won</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>782</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Which_Opportunity_Product</targetReference>
+        </connector>
+        <filterLogic>1 AND (2 OR 3 OR 4 OR 5 OR 6 OR 7 OR 8 OR 9 OR 10 OR 11 OR 12 OR 13 OR 14 OR 15 OR 16 OR 17) AND (18 OR 19)</filterLogic>
+        <filters>
+            <field>OppIsWon__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Banner Retargeting</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Connected TV</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Content Activation</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Dedicated Email</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Pre-Roll Video</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Social Media Retargeting</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Online Radio</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Buzz Spotlight</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Content Marketing</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Survey</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Webinar</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>White Paper</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Buzz Newsletter</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Sports Newsletter</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Tradeshow Email</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Event Targeting</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>ServiceDate</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>UnitPrice</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>OpportunityLineItem</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>Count_of_Sponsorship_or_Booth_Products</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+</Flow>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Send_email_alert_for_this_sold_product</name>
+        <label>Send email alert for this sold product</label>
+        <locationX>264</locationX>
+        <locationY>539</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_Marketing_for_specific_products_that_are_sold</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>Process_list_of_products_for_email_alerts</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>Process_list_of_products_for_email_alerts.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_Marketing_for_specific_products_that_are_sold</nameSegment>
+    </actionCalls>
+    <apiVersion>53.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <description>Added BizBash Sports Newsletter to list of products for alert.</description>
+    <environments>Default</environments>
+    <interviewLabel>Email alert to Marketing for specific products that are sold {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Email alert to Marketing for specific products that are sold</label>
+    <loops>
+        <name>Process_list_of_products_for_email_alerts</name>
+        <label>Process list of products for email alerts</label>
+        <locationX>176</locationX>
+        <locationY>431</locationY>
+        <collectionReference>Get_qualified_opportunity_products</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Send_email_alert_for_this_sold_product</targetReference>
+        </nextValueConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <description>Get the list of opportunity products we need to generate email alerts for.</description>
+        <name>Get_qualified_opportunity_products</name>
+        <label>Get qualified opportunity products</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Process_list_of_products_for_email_alerts</targetReference>
+        </connector>
+        <filterLogic>1 AND (2 OR 3 OR 4 OR 5 OR 6 OR 7 OR 8 OR 9 OR 10)</filterLogic>
+        <filters>
+            <field>OpportunityId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Product_Category__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Event</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Virtual Event Tech Showcase</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Webinar</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>White Paper</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Survey</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Event Masters</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Jeffersonian Series</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Experiential Activation</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Sports Newsletter</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>OpportunityLineItem</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_qualified_opportunity_products</targetReference>
+        </connector>
+        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>IsWon</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>Opportunity</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

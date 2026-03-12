@@ -1,6 +1,11 @@
 # Attendee Info Agent
 
-Salesforce automation for collecting and assigning event attendee details on Connect Meetings opportunities. The package uses two record-triggered flows, a GenAI prompt template, and invocable Apex to email signers for attendee information, extract structured data from their replies with AI, assign attendees to the correct registration line items, and maintain a complete audit trail of every processing run.
+Automation for collecting and assigning event attendee details on Connect Meetings opportunities. This Salesforce DX package uses two record-triggered flows, a GenAI prompt template, and invocable Apex to:
+
+- Email signers for missing attendee information
+- Use GenAI to extract structured attendee data from freeform replies
+- Assign attendees to the correct registration `OpportunityLineItem` records
+- Maintain a detailed audit trail of every processing run
 
 ## Table of Contents
 
@@ -11,6 +16,7 @@ Salesforce automation for collecting and assigning event attendee details on Con
 - [Attendee Assignment Logic](#attendee-assignment-logic)
 - [AI Extraction](#ai-extraction)
 - [Audit Logging Model](#audit-logging-model)
+- [Failure Follow-Up Task Pipeline](#failure-follow-up-task-pipeline)
 - [Component Reference](#component-reference)
 - [Data Model](#data-model)
 - [Repository Layout](#repository-layout)
@@ -311,6 +317,130 @@ One record per attendee assignment attempt. Sharing is controlled by the parent 
 
 The `Attendee_Processing_with_Details` report type joins `Attendee_Processing_Log__c` to `Attendee_Assignment_Detail__c` (outer join) for operations reporting on success rates, error patterns, and individual assignment decisions.
 
+## Failure Follow-Up Task Pipeline
+
+When attendee assignment encounters failures or partial success, an automated three-step pipeline creates a follow-up task for operators to review and resolve issues.
+
+### Pipeline Overview
+
+```mermaid
+flowchart LR
+    A["Assignment completes\nwith failures/partial success"] --> B["Flow step 2:\nBuildFailureContext queries\nfailed records"]
+    B --> C["GenAI generates\nnarrative summary\n100-200 words"]
+    C --> D["Flow step 3:\nCreateFollowUpTask\ncreates Task record"]
+    D --> E["Task assigned to\nmac.kitchin@informa.com\ndue in 30 days"]
+```
+
+### Step 1: BuildFailureContext
+
+**Class:** `BuildFailureContext` (Invocable Apex)
+
+Queries `Attendee_Assignment_Detail__c` records and formats a context block for AI prompt input.
+
+**Inputs:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `processingLogId` | String | ID of the `Attendee_Processing_Log__c` record (may be blank) |
+| `statusMessage` | String | Overall status message from the processing run |
+| `opportunityName` | String | Name of the Opportunity being processed |
+
+**Output:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `formattedContext` | String | Formatted narrative containing assigned and failed attendees with details, up to 10,000 characters |
+
+**Behavior:**
+- Queries all `Attendee_Assignment_Detail__c` records for the processing log
+- Groups records into two sections: "ASSIGNED ATTENDEES" and "FAILED / SKIPPED ATTENDEES"
+- Each attendee line includes: name, email, event name, product type, and error reason (if failed)
+- Truncates intelligently when exceeding 10,000 characters: removes entries from failed section first, then assigned section, preserving headers and at least one entry per section
+- Falls back to minimal context if no log ID provided or no records found
+
+**Security:** Runs with `SYSTEM_MODE` to ensure all users (triggered by Flow automation) can read all assignment detail records regardless of role-based sharing.
+
+### Step 2: Attendee Assignment Failure Summary
+
+**Template:** `Attendee_Assignment_Failure_Summary` (GenAI Prompt Template)
+
+Generates a concise, plain-English narrative summarizing the failure context for a Task description.
+
+**Configuration:**
+
+| Setting | Value |
+| --- | --- |
+| Model | Claude 3.5 Haiku on Bedrock |
+| Word Count | 100–200 words |
+| Format | Plain prose with optional plain dashes (-) for lists; no markdown |
+
+**Inputs:**
+- Formatted context from BuildFailureContext
+
+**Output:**
+- Plain-text narrative suitable for Task description, including:
+  - Summary of which attendees were successfully assigned
+  - Details of what failed (missing data, system errors, duplicates, etc.)
+  - Recommended next steps for the operator (manual matching, contact signer, etc.)
+
+### Step 3: CreateFollowUpTask
+
+**Class:** `CreateFollowUpTask` (Invocable Apex)
+
+Creates a Salesforce Task on the Opportunity with the AI-generated summary for operator review.
+
+**Inputs:**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `opportunityId` | Id | Yes | The Opportunity to attach the Task to |
+| `opportunityName` | String | Yes | Used in the Task subject, truncated to 200 characters |
+| `aiSummary` | String | No | AI-generated narrative for the Task description |
+| `statusMessage` | String | No | Fallback for Task description if aiSummary is blank |
+
+**Output:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `success` | Boolean | Whether the Task was created successfully |
+| `taskId` | Id | ID of the created Task (if successful) |
+| `errorMessage` | String | Error details if the operation failed |
+
+**Task Details:**
+
+| Field | Value |
+| --- | --- |
+| Subject | `Review Attendee Assignment Failures — <opportunityName>` (opportunityName truncated to 200 chars) |
+| WhatId | The Opportunity record |
+| OwnerId | `mac.kitchin@informa.com` (or running user if that account is inactive) |
+| ActivityDate | 30 days from today |
+| Status | Not Started |
+| Priority | Normal |
+| Type | Other |
+| Description | AI summary (or fallback status message if summary unavailable) |
+
+**Security:** Uses `insert as system` to ensure the Task is created regardless of current user permissions.
+
+**Owner Resolution:**
+- Queries for the User with email `mac.kitchin@informa.com` and `IsActive = TRUE` using `SYSTEM_MODE`
+- If found, assigns the Task to that user
+- If not found or inactive, logs a WARN message and assigns to the running user (`UserInfo.getUserId()`)
+
+### Integration with Flow
+
+The three steps are invoked sequentially within `Event_Registration_Process_Attendee_Reply`:
+
+1. After assignment completes and the processing log is updated, Flow invokes `BuildFailureContext` with the log ID and status details
+2. BuildFailureContext output is passed to the `Attendee_Assignment_Failure_Summary` prompt template via a GenAI Action
+3. GenAI output is passed to `CreateFollowUpTask` along with Opportunity details
+4. Task is created and operators are notified
+
+### Trigger Conditions
+
+The failure follow-up pipeline is triggered when:
+- `Attendee_Processing_Log__c.Status__c` = `Partial Success` or `Failed`
+- A fault connector in the assignment flow step catches an exception and updates the log status
+
 ## Component Reference
 
 | Component                                    | Type                  | Description                                                                |
@@ -324,6 +454,9 @@ The `Attendee_Processing_with_Details` report type joins `Attendee_Processing_Lo
 | `AttendeeProcessingLogger`                   | Apex (Invocable)      | Creates `Attendee_Processing_Log__c` records                               |
 | `AttendeeProcessingLogUpdater`               | Apex (Invocable)      | Updates existing processing log records                                    |
 | `AttendeeAssignmentDetailLogger`             | Apex (Invocable)      | Creates `Attendee_Assignment_Detail__c` records                            |
+| `BuildFailureContext`                        | Apex (Invocable)      | Queries failed/skipped assignment records and formats context for AI       |
+| `Attendee_Assignment_Failure_Summary`        | GenAI Prompt Template | Generates 100–200 word narrative summary for failure follow-up tasks       |
+| `CreateFollowUpTask`                         | Apex (Invocable)      | Creates Task on Opportunity assigned to mac.kitchin@informa.com            |
 | `Attendee_Processing_Log__c`                 | Custom Object         | Parent audit record (auto-number: APL-00000)                               |
 | `Attendee_Assignment_Detail__c`              | Custom Object         | Child audit record (auto-number: AAD-00000)                                |
 | `Attendee_Processing_with_Details`           | Report Type           | Processing logs joined to assignment details                               |
@@ -350,6 +483,8 @@ force-app/main/default/
 │   ├── AttendeeProcessingLogUpdater.cls
 │   ├── AttendeeReplyEmailHandler.cls
 │   ├── ProcessAppointmentTakerAttendees.cls
+│   ├── BuildFailureContext.cls
+│   ├── CreateFollowUpTask.cls
 │   ├── AttendeeProcessingLoggerTest.cls
 │   ├── AttendeeReplyEmailHandlerTest.cls
 │   └── ProcessAppointmentTakerAttendeesTest.cls
@@ -360,6 +495,7 @@ force-app/main/default/
 │   └── Event_Registration_Process_Attendee_Reply.flow-meta.xml
 ├── genAiPromptTemplates/
 │   ├── Extract_Attendee_Information.genAiPromptTemplate-meta.xml
+│   ├── Attendee_Assignment_Failure_Summary.genAiPromptTemplate-meta.xml
 │   └── Opportunity_Creation.genAiPromptTemplate-meta.xml
 ├── objects/
 │   ├── Attendee_Assignment_Detail__c/
@@ -390,10 +526,13 @@ sf project deploy start -o <alias> \
   --metadata ApexClass:AttendeeProcessingLogUpdater \
   --metadata ApexClass:AttendeeReplyEmailHandler \
   --metadata ApexClass:ProcessAppointmentTakerAttendees \
+  --metadata ApexClass:BuildFailureContext \
+  --metadata ApexClass:CreateFollowUpTask \
   --metadata ApexClass:AttendeeProcessingLoggerTest \
   --metadata ApexClass:ProcessAppointmentTakerAttendeesTest \
   --metadata ApexClass:AttendeeReplyEmailHandlerTest \
   --metadata GenAiPromptTemplate:Extract_Attendee_Information \
+  --metadata GenAiPromptTemplate:Attendee_Assignment_Failure_Summary \
   --metadata GenAiPromptTemplate:Opportunity_Creation \
   --metadata CustomObject:Attendee_Processing_Log__c \
   --metadata CustomObject:Attendee_Assignment_Detail__c \

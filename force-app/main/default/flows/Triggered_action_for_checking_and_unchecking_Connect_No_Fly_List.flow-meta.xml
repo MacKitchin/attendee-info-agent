@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>55.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Is_the_Connect_No_Fly_List_field_checked</name>
+        <label>Is the Connect No Fly List field checked?</label>
+        <locationX>314</locationX>
+        <locationY>311</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Connect_No_Fly_List_is_checked_off</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Connect_No_Fly_List__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Date_and_Adjuster_for_Connect_No_Fly_List</targetReference>
+            </connector>
+            <label>Connect No Fly List is checked off</label>
+        </rules>
+        <rules>
+            <name>Connect_No_Fly_List_is_unchecked</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Connect_No_Fly_List__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Clear_Connect_No_Fly_List_Reason</targetReference>
+            </connector>
+            <label>Connect No Fly List is unchecked</label>
+        </rules>
+    </decisions>
+    <description>If the Connect No Fly List field is checked, we automatically populate the Connect No Fly List Date field and the Connect No Fly List Adjuster field. If the Connect No Fly List field is unchecked, we clear the data in the Connect No Fly List Reason field.</description>
+    <environments>Default</environments>
+    <formulas>
+        <name>Todays_Date</name>
+        <dataType>Date</dataType>
+        <expression>today()</expression>
+    </formulas>
+    <formulas>
+        <name>UsersFullName</name>
+        <dataType>String</dataType>
+        <expression>{!$User.FirstName} &amp; &quot; &quot; &amp; {!$User.LastName}</expression>
+    </formulas>
+    <interviewLabel>Triggered action for checking and unchecking Connect No Fly List {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Triggered action for checking and unchecking Connect No Fly List</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <description>If the Connect No Fly List checkbox has just been unchecked, we clear the data in Connect No Fly List Reason</description>
+        <name>Clear_Connect_No_Fly_List_Reason</name>
+        <label>Clear Connect No Fly List Reason</label>
+        <locationX>314</locationX>
+        <locationY>431</locationY>
+        <inputAssignments>
+            <field>Connect_No_Fly_List_Reason__c</field>
+            <value>
+                <stringValue></stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Date_and_Adjuster_for_Connect_No_Fly_List</name>
+        <label>Update Date and Adjuster for Connect No Fly List</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <inputAssignments>
+            <field>Connect_No_Fly_List_Adjuster__c</field>
+            <value>
+                <elementReference>UsersFullName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Connect_No_Fly_List_Date__c</field>
+            <value>
+                <elementReference>Todays_Date</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>188</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Is_the_Connect_No_Fly_List_field_checked</targetReference>
+        </connector>
+        <filterFormula>ISCHANGED({!$Record.Connect_No_Fly_List__c})</filterFormula>
+        <object>Contact</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

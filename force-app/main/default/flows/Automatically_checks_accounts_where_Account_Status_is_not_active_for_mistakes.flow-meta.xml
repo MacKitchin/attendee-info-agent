@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>61.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <description>This daily flow will try to catch special cases like when accounts are merged where the Account Status does not accurately reflect where an account is active, meaning they closed/won an opportunity in the last 3 years.</description>
+    <environments>Default</environments>
+    <formulas>
+        <name>ThreeYearsAgoFromToday</name>
+        <dataType>Date</dataType>
+        <expression>DATE(year(today()) - 3,month(today()),day(today()))</expression>
+    </formulas>
+    <interviewLabel>Automatically checks accounts where Account Status is not active for mistakes {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Automatically checks accounts where Account Status is not active for mistakes</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Update_Account_Status_if_the_account_qualifies</name>
+        <label>Update Account Status if the account qualifies</label>
+        <locationX>176</locationX>
+        <locationY>252</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Last_Won_Opportunity_Date__c</field>
+            <operator>GreaterThanOrEqualTo</operator>
+            <value>
+                <elementReference>ThreeYearsAgoFromToday</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Account_Status__c</field>
+            <value>
+                <stringValue>Active</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Update_Account_Status_if_the_account_qualifies</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Account_Status__c</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Active</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Last_Won_Opportunity_Date__c</field>
+            <operator>NotEqualTo</operator>
+        </filters>
+        <object>Account</object>
+        <schedule>
+            <frequency>Daily</frequency>
+            <startDate>2024-10-09</startDate>
+            <startTime>02:45:00.000Z</startTime>
+        </schedule>
+        <triggerType>Scheduled</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

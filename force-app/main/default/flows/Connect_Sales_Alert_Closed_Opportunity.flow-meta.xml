@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Closed_opportunity_alert_for_all_sales_teams</name>
+        <label>Closed opportunity alert for all sales teams</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>Opportunity.Closed_opportunity_alert_for_all_sales_teams</actionName>
+        <actionType>emailAlert</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Opportunity.Closed_opportunity_alert_for_all_sales_teams</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>64.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <description>Migrated from the: Connect Sales Alert - Closed Opportunity workflow rule
+Workflow rule description: Sends alerts to Connect Sales channel in Slack when an opportunity is closed for Connect Meetings.&quot;</description>
+    <environments>Default</environments>
+    <label>Connect Sales Alert - Closed Opportunity</label>
+    <migratedFromWorkflowRuleName>Connect Sales Alert - Closed Opportunity</migratedFromWorkflowRuleName>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Closed_opportunity_alert_for_all_sales_teams</targetReference>
+        </connector>
+        <filterFormula>AND( 
+ ISCHANGED( {!$Record.StageName} ), 
+ {!$Record.IsWon}, 
+ {!$Record.Amount} &gt; 0
+)</filterFormula>
+        <object>Opportunity</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

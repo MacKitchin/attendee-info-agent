@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_aeops_informa_com_for_cancelled_order</name>
+        <label>Email alert to InformaEngage, aeops@informa.com, for cancelled order</label>
+        <locationX>528</locationX>
+        <locationY>647</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_aeops_informa_com_for_cancelled_order</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>loop_through_tracked_products_in_this_closed_lost_opp</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>loop_through_tracked_products_in_this_closed_lost_opp.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_aeops_informa_com_for_cancelled_order</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_data_marketing_orders_informa_for_cancelled_ord</name>
+        <label>Email alert to InformaEngage, data-marketing-orders@informa, for cancelled ord</label>
+        <locationX>792</locationX>
+        <locationY>647</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_data_marketing_orders_informa_com_for_cancelled_ord</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>loop_through_tracked_products_in_this_closed_lost_opp</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>loop_through_tracked_products_in_this_closed_lost_opp.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_data_marketing_orders_informa_com_for_cancelled_ord</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_cancelled_order</name>
+        <label>Email alert to InformaEngage, EngageQATeam@informa.com, for cancelled order</label>
+        <locationX>264</locationX>
+        <locationY>647</locationY>
+        <actionName>OpportunityLineItem.Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_cancelled_order</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>loop_through_tracked_products_in_this_closed_lost_opp</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>loop_through_tracked_products_in_this_closed_lost_opp.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>OpportunityLineItem.Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_cancelled_order</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>53.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <decisions>
+        <name>Which_Opportunity_Product</name>
+        <label>Which Opportunity Product</label>
+        <locationX>660</locationX>
+        <locationY>539</locationY>
+        <defaultConnector>
+            <targetReference>loop_through_tracked_products_in_this_closed_lost_opp</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>For_EngageQATeam_informa_com</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BizBash Buzz Spotlight</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BizBash Buzz Newsletter</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BizBash Sports Newsletter</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Content Marketing</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Survey</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Webinar</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>White Paper</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_EngageQATeam_informa_com_for_cancelled_order</targetReference>
+            </connector>
+            <label>For EngageQATeam@informa.com</label>
+        </rules>
+        <rules>
+            <name>For_aeops_informa_com</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Banner Retargeting</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Connected TV</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Content Activation</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Pre-Roll Video</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Social Media Retargeting</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Online Radio</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Event Targeting</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_aeops_informa_com_for_cancelled_order</targetReference>
+            </connector>
+            <label>For aeops@informa.com</label>
+        </rules>
+        <rules>
+            <name>For_data_marketing_orders_informa_com</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Dedicated Email</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>loop_through_tracked_products_in_this_closed_lost_opp.Also_Product_Name__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Tradeshow Email</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Email_alert_to_InformaEngage_data_marketing_orders_informa_for_cancelled_ord</targetReference>
+            </connector>
+            <label>For data-marketing-orders@informa.com</label>
+        </rules>
+    </decisions>
+    <description>If the opportunity is cancelled then we have to inform Engage of the cancellation of the products they want us to track.</description>
+    <environments>Default</environments>
+    <interviewLabel>Email alert to InformaEngage when an opportunity is cancelled after closed/won {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Email alert to InformaEngage when an opportunity is cancelled after closed/won</label>
+    <loops>
+        <name>loop_through_tracked_products_in_this_closed_lost_opp</name>
+        <label>loop through tracked products in this closed/lost opp</label>
+        <locationX>176</locationX>
+        <locationY>431</locationY>
+        <collectionReference>get_products_in_this_closed_lost_opportunity</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Which_Opportunity_Product</targetReference>
+        </nextValueConnector>
+    </loops>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>get_products_in_this_closed_lost_opportunity</name>
+        <label>get products in this closed/lost opportunity</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>loop_through_tracked_products_in_this_closed_lost_opp</targetReference>
+        </connector>
+        <filterLogic>1 AND (2 OR 3 OR 4 OR 5 OR 6 OR 7 OR 8 OR 9 OR 10 OR 11 OR 12 OR 13 OR 14 OR 15 OR 16 OR 17)</filterLogic>
+        <filters>
+            <field>OpportunityId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Banner Retargeting</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Connected TV</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Content Activation</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Dedicated Email</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Pre-Roll Video</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Social Media Retargeting</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Online Radio</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Buzz Spotlight</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Content Marketing</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Survey</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Webinar</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>White Paper</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Buzz Newsletter</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>BizBash Sports Newsletter</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Tradeshow Email</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Also_Product_Name__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Event Targeting</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>OpportunityLineItem</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>get_products_in_this_closed_lost_opportunity</targetReference>
+        </connector>
+        <filterFormula>PRIORVALUE({!$Record.IsWon}) &amp;&amp; 
+ISPICKVAL({!$Record.StageName}, &apos;Closed Lost&apos;)</filterFormula>
+        <object>Opportunity</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <variables>
+        <name>Count_of_Sponsorship_or_Booth_Products</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+</Flow>
