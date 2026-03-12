@@ -96,22 +96,22 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
 
       // Build and insert the incoming EmailMessage linked to the Opportunity.
       // This insert triggers Flow B (Event Registration - Process Attendee Reply).
-      EmailMessage em = new EmailMessage();
-      em.Subject = subject;
-      em.TextBody = plainBody; // prompt-safe body prepared from the inbound reply
-      em.HtmlBody = null; // omit HTML; prompt template uses TextBody only
-      em.FromAddress = fromAddr;
-      em.FromName = email.fromName;
-      em.ToAddress = email.toAddresses != null
+      EmailMessage incomingEmailMessage = new EmailMessage();
+      incomingEmailMessage.Subject = subject;
+      incomingEmailMessage.TextBody = plainBody; // prompt-safe body prepared from the inbound reply
+      incomingEmailMessage.HtmlBody = null; // omit HTML; prompt template uses TextBody only
+      incomingEmailMessage.FromAddress = fromAddr;
+      incomingEmailMessage.FromName = email.fromName;
+      incomingEmailMessage.ToAddress = email.toAddresses != null
         ? String.join(email.toAddresses, '; ')
         : '';
-      em.Incoming = true;
-      em.Status = '0'; // New
-      em.MessageDate = System.now();
-      em.RelatedToId = opportunityId;
-      em.ReplyToEmailMessageId = replyToEmailMessageId;
+      incomingEmailMessage.Incoming = true;
+      incomingEmailMessage.Status = '0'; // New
+      incomingEmailMessage.MessageDate = System.now();
+      incomingEmailMessage.RelatedToId = opportunityId;
+      incomingEmailMessage.ReplyToEmailMessageId = replyToEmailMessageId;
 
-      insert em;
+      insert incomingEmailMessage;
 
       result.success = true;
     } catch (Exception e) {
@@ -130,23 +130,23 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     }
 
     // Find the earliest reply separator: Outlook underscores or -----Original Message-----
-    Integer outlookIdx = body.indexOf(OUTLOOK_REPLY_SEPARATOR);
-    Integer origMsgIdx = body.indexOf(ORIGINAL_MESSAGE_SEPARATOR);
+    Integer outlookSeparatorIndex = body.indexOf(OUTLOOK_REPLY_SEPARATOR);
+    Integer originalMessageSeparatorIndex = body.indexOf(ORIGINAL_MESSAGE_SEPARATOR);
 
-    Integer separatorIdx = -1;
-    Integer separatorLen = 0;
-    if (outlookIdx > 0 && (origMsgIdx <= 0 || outlookIdx <= origMsgIdx)) {
-      separatorIdx = outlookIdx;
-      separatorLen = OUTLOOK_REPLY_SEPARATOR.length();
-    } else if (origMsgIdx > 0) {
-      separatorIdx = origMsgIdx;
-      separatorLen = ORIGINAL_MESSAGE_SEPARATOR.length();
+    Integer separatorStartIndex = -1;
+    Integer separatorLength = 0;
+    if (outlookSeparatorIndex > 0 && (originalMessageSeparatorIndex <= 0 || outlookSeparatorIndex <= originalMessageSeparatorIndex)) {
+      separatorStartIndex = outlookSeparatorIndex;
+      separatorLength = OUTLOOK_REPLY_SEPARATOR.length();
+    } else if (originalMessageSeparatorIndex > 0) {
+      separatorStartIndex = originalMessageSeparatorIndex;
+      separatorLength = ORIGINAL_MESSAGE_SEPARATOR.length();
     }
 
-    if (separatorIdx > 0) {
-      String topReply = body.substring(0, separatorIdx).trim();
+    if (separatorStartIndex > 0) {
+      String topReply = body.substring(0, separatorStartIndex).trim();
       String quotedReply = body
-        .substring(separatorIdx + separatorLen)
+        .substring(separatorStartIndex + separatorLength)
         .trim();
 
       // Preserve current behavior for normal replies, but recover attendee data
@@ -212,14 +212,14 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     Id opportunityId,
     String fromAddr
   ) {
-    String token = '[REG:' + String.valueOf(opportunityId) + ']';
+    String registrationToken = '[REG:' + String.valueOf(opportunityId) + ']';
     List<EmailMessage> candidates = [
       SELECT Id, ToAddress
       FROM EmailMessage
       WHERE
         Incoming = FALSE
         AND RelatedToId = :opportunityId
-        AND Subject LIKE :('%' + token + '%')
+        AND Subject LIKE :('%' + registrationToken + '%')
       ORDER BY CreatedDate DESC
       LIMIT 25
     ];
@@ -260,13 +260,13 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     if (String.isBlank(subject)) {
       return null;
     }
-    Matcher m = REG_TOKEN_PATTERN.matcher(subject);
-    if (!m.find()) {
+    Matcher tokenMatcher = REG_TOKEN_PATTERN.matcher(subject);
+    if (!tokenMatcher.find()) {
       return null;
     }
-    String rawId = m.group(1);
+    String rawOpportunityId = tokenMatcher.group(1);
     try {
-      return (Id) rawId;
+      return (Id) rawOpportunityId;
     } catch (Exception e) {
       return null;
     }
@@ -286,8 +286,8 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     }
     String targetDomain = extractEmailDomain(target);
     String normalizedList = addressList.replace(',', ';');
-    for (String token : normalizedList.split(';')) {
-      String candidate = normalizeEmail(token);
+    for (String rawAddress : normalizedList.split(';')) {
+      String candidate = normalizeEmail(rawAddress);
       if (String.isBlank(candidate)) {
         continue;
       }
@@ -309,11 +309,11 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     if (String.isBlank(value)) {
       return null;
     }
-    Integer at = value.lastIndexOf('@');
-    if (at <= 0 || at >= value.length() - 1) {
+    Integer atSignIndex = value.lastIndexOf('@');
+    if (atSignIndex <= 0 || atSignIndex >= value.length() - 1) {
       return null;
     }
-    return value.substring(at + 1);
+    return value.substring(atSignIndex + 1);
   }
 
   private static String normalizeEmail(String raw) {
@@ -322,10 +322,10 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
     }
     String value = raw.trim().toLowerCase();
 
-    Integer lt = value.indexOf('<');
-    Integer gt = value.indexOf('>');
-    if (lt >= 0 && gt > lt) {
-      value = value.substring(lt + 1, gt).trim();
+    Integer ltBracketIndex = value.indexOf('<');
+    Integer gtBracketIndex = value.indexOf('>');
+    if (ltBracketIndex >= 0 && gtBracketIndex > ltBracketIndex) {
+      value = value.substring(ltBracketIndex + 1, gtBracketIndex).trim();
     }
 
     if (value.startsWith('"') && value.endsWith('"') && value.length() > 1) {

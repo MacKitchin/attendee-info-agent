@@ -324,17 +324,17 @@ public with sharing class ProcessAppointmentTakerAttendees {
         );
 
         // Build clean SObject to avoid USER_MODE FLS errors on relationship fields
-        OpportunityLineItem upd = new OpportunityLineItem(Id = target.Id);
-        upd.Attendee_First_Name__c = a.firstName;
-        upd.Attendee_Name__c =
+        OpportunityLineItem lineItemUpdate = new OpportunityLineItem(Id = target.Id);
+        lineItemUpdate.Attendee_First_Name__c = a.firstName;
+        lineItemUpdate.Attendee_Name__c =
           a.firstName + (String.isNotBlank(a.lastName) ? ' ' + a.lastName : '');
-        upd.Attendee_Email__c = a.email;
+        lineItemUpdate.Attendee_Email__c = a.email;
 
         // Populate Event Attendee Contact lookup
         if (assignedContactId != null) {
-          upd.Event_Attendee_Contact__c = assignedContactId;
+          lineItemUpdate.Event_Attendee_Contact__c = assignedContactId;
         }
-        toUpdate.add(upd);
+        toUpdate.add(lineItemUpdate);
       } else {
         skippedAssignments.add(new AssignmentAttempt(a, null, null));
       }
@@ -361,7 +361,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
     // Bulk update with SYSTEM_MODE so all custom fields (e.g. Attendee_Name__c)
     // are written regardless of FLS for the automated process running user.
     // SOQL above uses USER_MODE to enforce read security on the query.
-    Database.SaveResult[] srList = Database.update(
+    Database.SaveResult[] saveResults = Database.update(
       toUpdate,
       false,
       AccessLevel.SYSTEM_MODE
@@ -369,13 +369,13 @@ public with sharing class ProcessAppointmentTakerAttendees {
 
     // Compute result counts and message
     Integer successCount = 0;
-    List<String> errs = new List<String>();
-    for (Integer i = 0; i < srList.size(); i++) {
-      if (srList[i].isSuccess()) {
+    List<String> errorMessages = new List<String>();
+    for (Integer i = 0; i < saveResults.size(); i++) {
+      if (saveResults[i].isSuccess()) {
         successCount++;
       } else {
-        for (Database.Error e : srList[i].getErrors()) {
-          errs.add(
+        for (Database.Error e : saveResults[i].getErrors()) {
+          errorMessages.add(
             'OLI ' +
               toUpdate[i].Id +
               ': ' +
@@ -392,9 +392,9 @@ public with sharing class ProcessAppointmentTakerAttendees {
     // prefer attendee-centric unassigned count for clarity
     Integer notAssigned = unassignedFromDemand;
     Integer openSlotsRemaining = Math.max(0, available.size() - successCount);
-    String errorCategory = classifyProcessingError(errs);
+    String errorCategory = classifyProcessingError(errorMessages);
 
-    String detail =
+    String statusDetail =
       'Attendees provided=' +
       attendees.size() +
       ', assigned=' +
@@ -404,21 +404,21 @@ public with sharing class ProcessAppointmentTakerAttendees {
       ', openSlots=' +
       openSlotsRemaining;
 
-    if (!errs.isEmpty()) {
-      detail += '. Errors: ' + String.join(errs, ' | ');
+    if (!errorMessages.isEmpty()) {
+      statusDetail += '. Errors: ' + String.join(errorMessages, ' | ');
     }
 
     logAssignmentDetails(
       req.processingLogId,
       attemptedAssignments,
       skippedAssignments,
-      srList
+      saveResults
     );
 
     if (successCount == attendees.size()) {
       return new Result(
         true,
-        buildStatus(STATUS_PART.SUCCESS_ASSIGNED, detail),
+        buildStatus(STATUS_PART.SUCCESS_ASSIGNED, statusDetail),
         attendees.size(),
         successCount,
         notAssigned,
@@ -429,7 +429,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
     } else if (successCount > 0) {
       return new Result(
         true,
-        buildStatus(STATUS_PART.PARTIAL_ASSIGNED, detail),
+        buildStatus(STATUS_PART.PARTIAL_ASSIGNED, statusDetail),
         attendees.size(),
         successCount,
         notAssigned,
@@ -440,7 +440,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
     } else {
       return new Result(
         false,
-        buildStatus(STATUS_PART.ERROR, detail),
+        buildStatus(STATUS_PART.ERROR, statusDetail),
         attendees.size(),
         successCount,
         notAssigned,
@@ -561,7 +561,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
     Id processingLogId,
     List<AssignmentAttempt> attemptedAssignments,
     List<AssignmentAttempt> skippedAssignments,
-    Database.SaveResult[] srList
+    Database.SaveResult[] saveResults
   ) {
     if (processingLogId == null) {
       return;
@@ -584,11 +584,11 @@ public with sharing class ProcessAppointmentTakerAttendees {
       input.previousAttendeeEmail = attempt.target.Attendee_Email__c;
       input.previousContactId = attempt.target.Event_Attendee_Contact__c;
 
-      if (srList[i].isSuccess()) {
+      if (saveResults[i].isSuccess()) {
         input.assignmentStatus = 'Assigned';
       } else {
         input.assignmentStatus = 'Failed';
-        input.assignmentError = extractSaveErrors(srList[i]);
+        input.assignmentError = extractSaveErrors(saveResults[i]);
       }
       inputs.add(input);
     }
@@ -662,38 +662,38 @@ public with sharing class ProcessAppointmentTakerAttendees {
     if (!(root instanceof List<Object>)) {
       throw new ProcessException('JSON must be an array.');
     }
-    List<Object> rawList = (List<Object>) root;
-    List<Attendee> out = new List<Attendee>();
-    for (Object row : rawList) {
+    List<Object> rawAttendeeObjects = (List<Object>) root;
+    List<Attendee> parsedAttendees = new List<Attendee>();
+    for (Object row : rawAttendeeObjects) {
       if (!(row instanceof Map<String, Object>)) {
         continue;
       }
-      Map<String, Object> m = (Map<String, Object>) row;
-      String fn = (m.containsKey('first_name') && m.get('first_name') != null)
-        ? String.valueOf(m.get('first_name')).trim()
+      Map<String, Object> attendeeFields = (Map<String, Object>) row;
+      String firstName = (attendeeFields.containsKey('first_name') && attendeeFields.get('first_name') != null)
+        ? String.valueOf(attendeeFields.get('first_name')).trim()
         : null;
-      String ln = (m.containsKey('last_name') && m.get('last_name') != null)
-        ? String.valueOf(m.get('last_name')).trim()
+      String lastName = (attendeeFields.containsKey('last_name') && attendeeFields.get('last_name') != null)
+        ? String.valueOf(attendeeFields.get('last_name')).trim()
         : null;
-      String em = (m.containsKey('email') && m.get('email') != null)
-        ? String.valueOf(m.get('email')).trim()
+      String email = (attendeeFields.containsKey('email') && attendeeFields.get('email') != null)
+        ? String.valueOf(attendeeFields.get('email')).trim()
         : null;
-      String ev = (m.containsKey('event_name') && m.get('event_name') != null)
-        ? String.valueOf(m.get('event_name')).trim()
+      String eventName = (attendeeFields.containsKey('event_name') && attendeeFields.get('event_name') != null)
+        ? String.valueOf(attendeeFields.get('event_name')).trim()
         : null;
-      String pt = (m.containsKey('product_type') &&
-        m.get('product_type') != null)
-        ? String.valueOf(m.get('product_type')).trim()
+      String productType = (attendeeFields.containsKey('product_type') &&
+        attendeeFields.get('product_type') != null)
+        ? String.valueOf(attendeeFields.get('product_type')).trim()
         : null;
 
       // Require at minimum email and first name; allow empty last name
-      if (String.isBlank(fn) || String.isBlank(em)) {
+      if (String.isBlank(firstName) || String.isBlank(email)) {
         continue;
       }
-      if (ln == null)
-        ln = '';
-      out.add(new Attendee(fn, ln, em, ev, pt));
+      if (lastName == null)
+        lastName = '';
+      parsedAttendees.add(new Attendee(firstName, lastName, email, eventName, productType));
     }
-    return out;
+    return parsedAttendees;
   }
 }

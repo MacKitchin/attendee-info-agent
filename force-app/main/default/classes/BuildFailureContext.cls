@@ -45,14 +45,14 @@ public with sharing class BuildFailureContext {
     List<Result> results = new List<Result>();
 
     for (Request req : requests) {
-      results.add(buildSingle(req));
+      results.add(buildContextForRequest(req));
     }
 
     return results;
   }
 
-  private static Result buildSingle(Request req) {
-    Result res = new Result();
+  private static Result buildContextForRequest(Request req) {
+    Result contextResult = new Result();
 
     // Header — always present
     String header =
@@ -64,20 +64,20 @@ public with sharing class BuildFailureContext {
 
     // If no log ID, return minimal context
     if (String.isBlank(req.processingLogId)) {
-      res.formattedContext =
+      contextResult.formattedContext =
         header +
         '\n\nNo detailed assignment records are available for this run.';
-      return res;
+      return contextResult;
     }
 
     Id logId;
     try {
       logId = Id.valueOf(req.processingLogId);
     } catch (Exception e) {
-      res.formattedContext =
+      contextResult.formattedContext =
         header +
         '\n\nNo detailed assignment records are available for this run.';
-      return res;
+      return contextResult;
     }
 
     // Query assigned records (SYSTEM_MODE — this runs as an automated backend
@@ -114,20 +114,20 @@ public with sharing class BuildFailureContext {
 
     // If no records at all, return minimal context
     if (assigned.isEmpty() && failedSkipped.isEmpty()) {
-      res.formattedContext =
+      contextResult.formattedContext =
         header +
         '\n\nNo detailed assignment records are available for this run.';
-      return res;
+      return contextResult;
     }
 
     // Build assigned lines
     List<String> assignedLines = new List<String>();
     if (!assigned.isEmpty()) {
       assignedLines.add('\nASSIGNED ATTENDEES:');
-      Integer idx = 1;
-      for (Attendee_Assignment_Detail__c d : assigned) {
-        assignedLines.add(formatAssignedLine(idx, d));
-        idx++;
+      Integer lineNumber = 1;
+      for (Attendee_Assignment_Detail__c detail : assigned) {
+        assignedLines.add(formatAssignedLine(lineNumber, detail));
+        lineNumber++;
       }
     }
 
@@ -135,61 +135,61 @@ public with sharing class BuildFailureContext {
     List<String> failedLines = new List<String>();
     if (!failedSkipped.isEmpty()) {
       failedLines.add('\nFAILED / SKIPPED ATTENDEES:');
-      Integer idx = 1;
-      for (Attendee_Assignment_Detail__c d : failedSkipped) {
-        failedLines.add(formatFailedLine(idx, d));
-        idx++;
+      Integer lineNumber = 1;
+      for (Attendee_Assignment_Detail__c detail : failedSkipped) {
+        failedLines.add(formatFailedLine(lineNumber, detail));
+        lineNumber++;
       }
     }
 
     // Assemble and truncate if needed
-    res.formattedContext = assembleWithTruncation(
+    contextResult.formattedContext = assembleWithTruncation(
       header,
       assignedLines,
       failedLines
     );
-    return res;
+    return contextResult;
   }
 
   private static String formatAssignedLine(
-    Integer idx,
-    Attendee_Assignment_Detail__c d
+    Integer lineNumber,
+    Attendee_Assignment_Detail__c detail
   ) {
-    return idx +
+    return lineNumber +
       '. ' +
-      safeStr(d.Extracted_Name__c) +
+      blankToEmpty(detail.Extracted_Name__c) +
       ' (' +
-      safeStr(d.Extracted_Email__c) +
+      blankToEmpty(detail.Extracted_Email__c) +
       ')' +
       ' \u2014 Event: ' +
-      safeStr(d.Event_Name__c) +
+      blankToEmpty(detail.Event_Name__c) +
       ' | Product: ' +
-      safeStr(d.Product_Type__c);
+      blankToEmpty(detail.Product_Type__c);
   }
 
   private static String formatFailedLine(
-    Integer idx,
-    Attendee_Assignment_Detail__c d
+    Integer lineNumber,
+    Attendee_Assignment_Detail__c detail
   ) {
     String line =
-      idx +
+      lineNumber +
       '. ' +
-      safeStr(d.Extracted_Name__c) +
+      blankToEmpty(detail.Extracted_Name__c) +
       ' (' +
-      safeStr(d.Extracted_Email__c) +
+      blankToEmpty(detail.Extracted_Email__c) +
       ')' +
       ' \u2014 Event: ' +
-      safeStr(d.Event_Name__c) +
+      blankToEmpty(detail.Event_Name__c) +
       ' | Product: ' +
-      safeStr(d.Product_Type__c);
-    if (String.isNotBlank(d.Assignment_Error__c)) {
-      line += '\n   Reason: ' + d.Assignment_Error__c;
+      blankToEmpty(detail.Product_Type__c);
+    if (String.isNotBlank(detail.Assignment_Error__c)) {
+      line += '\n   Reason: ' + detail.Assignment_Error__c;
     }
     return line;
   }
 
-  private static String safeStr(String val) {
-    return String.isBlank(val) ? '' : val;
+  private static String blankToEmpty(String value) {
+    return String.isBlank(value) ? '' : value;
   }
 
   /**
@@ -203,37 +203,37 @@ public with sharing class BuildFailureContext {
     List<String> assignedLines,
     List<String> failedLines
   ) {
-    String full = header;
+    String assembledContext = header;
     for (String line : assignedLines) {
-      full += '\n' + line;
+      assembledContext += '\n' + line;
     }
     for (String line : failedLines) {
-      full += '\n' + line;
+      assembledContext += '\n' + line;
     }
 
-    if (full.length() <= MAX_LENGTH) {
-      return full;
+    if (assembledContext.length() <= MAX_LENGTH) {
+      return assembledContext;
     }
 
     // Truncation needed — remove lines from middle of failed section first,
     // then assigned section. Always keep header + section headers + first entry.
 
     // Try removing failed lines from middle first
-    List<String> trimmedFailed = truncateSection(failedLines);
-    String attempt = buildOutput(header, assignedLines, trimmedFailed);
-    if (attempt.length() <= MAX_LENGTH) {
-      return attempt;
+    List<String> truncatedFailedLines = truncateSection(failedLines);
+    String truncatedContext = joinSectionsWithTruncationMarker(header, assignedLines, truncatedFailedLines);
+    if (truncatedContext.length() <= MAX_LENGTH) {
+      return truncatedContext;
     }
 
     // Still too long — also truncate assigned section
-    List<String> trimmedAssigned = truncateSection(assignedLines);
-    attempt = buildOutput(header, trimmedAssigned, trimmedFailed);
-    if (attempt.length() <= MAX_LENGTH) {
-      return attempt;
+    List<String> truncatedAssignedLines = truncateSection(assignedLines);
+    truncatedContext = joinSectionsWithTruncationMarker(header, truncatedAssignedLines, truncatedFailedLines);
+    if (truncatedContext.length() <= MAX_LENGTH) {
+      return truncatedContext;
     }
 
     // Last resort — hard truncate
-    return attempt.substring(0, MAX_LENGTH - TRUNCATION_MARKER.length()) +
+    return truncatedContext.substring(0, MAX_LENGTH - TRUNCATION_MARKER.length()) +
       TRUNCATION_MARKER;
   }
 
@@ -249,19 +249,19 @@ public with sharing class BuildFailureContext {
     return new List<String>{ sectionLines[0], sectionLines[1] };
   }
 
-  private static String buildOutput(
+  private static String joinSectionsWithTruncationMarker(
     String header,
     List<String> assignedLines,
     List<String> failedLines
   ) {
-    String output = header;
+    String assembledOutput = header;
     for (String line : assignedLines) {
-      output += '\n' + line;
+      assembledOutput += '\n' + line;
     }
     for (String line : failedLines) {
-      output += '\n' + line;
+      assembledOutput += '\n' + line;
     }
-    output += TRUNCATION_MARKER;
-    return output;
+    assembledOutput += TRUNCATION_MARKER;
+    return assembledOutput;
   }
 }
