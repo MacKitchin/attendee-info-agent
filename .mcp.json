@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "unusualwhales": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "unusualwhales-mcp"
+      ],
+      "env": {
+        "UNUSUAL_WHALES_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
