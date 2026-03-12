@@ -453,7 +453,10 @@ private class ProcessAppointmentTakerAttendeesTest {
   }
 
   @IsTest
-  static void testPartiallyFilledLineItem_notTreatedAsOpen() {
+  static void testPartiallyFilledLineItem_treatedAsOpen() {
+    // An OLI with only Attendee_Name__c set (email missing) mirrors what the outbound flow
+    // considers "needs registration" (OR logic).  The inbound processor must also treat it as
+    // open so the reply can complete the slot, preventing NO_MATCHING_LINE_ITEMS.
     Id stdPbId = getStandardPricebookId();
     PricebookEntry pbe = getTestPricebookEntry();
 
@@ -500,20 +503,19 @@ private class ProcessAppointmentTakerAttendeesTest {
     System.assertEquals(
       true,
       res[0].isSuccess,
-      'Partially filled slots should not be treated as open'
+      'Partially filled slot (email missing) should be treated as open and assigned'
     );
     System.assert(
-      res[0].statusMessage.contains('NO_MATCHING_LINE_ITEMS'),
-      'Expected partially filled slot to be excluded from assignment'
+      res[0].statusMessage.contains('SUCCESS_ASSIGNED'),
+      'Expected successful assignment of partially filled slot'
     );
 
-    OpportunityLineItem unchanged = [
+    OpportunityLineItem assigned = [
       SELECT Attendee_Name__c, Attendee_Email__c
       FROM OpportunityLineItem
       WHERE Id = :oli.Id
     ];
-    System.assertEquals('Existing Name', unchanged.Attendee_Name__c);
-    System.assertEquals(null, unchanged.Attendee_Email__c);
+    System.assertEquals('first0.last0@example.com', assigned.Attendee_Email__c);
   }
 
   @IsTest
