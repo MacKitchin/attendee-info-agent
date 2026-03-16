@@ -90,7 +90,9 @@ private class BuildFailureContextTest {
       'Should contain status message'
     );
     System.assert(
-      ctx.contains('No detailed assignment records are available for this run.'),
+      ctx.contains(
+        'No detailed assignment records are available for this run.'
+      ),
       'Should contain no-details message'
     );
   }
@@ -124,7 +126,9 @@ private class BuildFailureContextTest {
       'Should contain status message'
     );
     System.assert(
-      ctx.contains('No detailed assignment records are available for this run.'),
+      ctx.contains(
+        'No detailed assignment records are available for this run.'
+      ),
       'Should contain no-details message when no detail records exist'
     );
   }

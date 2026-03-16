@@ -1,12 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Create or update an Opportunity record from source data. Map required fields, optional fields, relationships, and handle idempotent upsert logic.</description>
+    <description
+  >Create or update an Opportunity record from source data. Map required fields, optional fields, relationships, and handle idempotent upsert logic.</description>
     <developerName>Opportunity_Creation</developerName>
     <masterLabel>Opportunity Creation</masterLabel>
     <relatedEntity>Opportunity</relatedEntity>
     <relatedField>Opportunity.Name</relatedField>
     <templateVersions>
-        <content>You are an autonomous assistant that creates **new** Opportunity records (with products) in Salesforce based on unstructured customer messages or activity logs. Your goal is to parse the user’s natural‑language request, identify the relevant Salesforce fields, and prepare a new Opportunity with all required information.
+        <content
+    >You are an autonomous assistant that creates **new** Opportunity records (with products) in Salesforce based on unstructured customer messages or activity logs. Your goal is to parse the user’s natural‑language request, identify the relevant Salesforce fields, and prepare a new Opportunity with all required information.
 
 **What to extract and how:**
 • Identify the Account and Contact names from the text. If the Account does not exist, plan to create it; likewise create the Contact and add them as the primary OpportunityContactRole.
@@ -35,7 +37,8 @@
         </inputs>
         <primaryModel>sfdc_ai__DefaultGPT5</primaryModel>
         <status>Draft</status>
-        <versionIdentifier>ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</versionIdentifier>
+        <versionIdentifier
+    >ZIlRtZe/8M3Mc2eeNQZh/XfIr52n4hFYfLjZbf7Z6ic=_1</versionIdentifier>
     </templateVersions>
     <type>einstein_gpt__fieldCompletion</type>
     <visibility>Global</visibility>

@@ -6,7 +6,7 @@
 
 **Architecture:** Two new invocable Apex classes (`BuildFailureContext` and `CreateFollowUpTask`) plus a new GenAI prompt template (`Attendee_Assignment_Failure_Summary`). The Flow is modified to add a `Decision_Needs_Task` node on both its success and failure branches (because `Partial Success` and several `Failed` paths exit through `isSuccess = true`), which chains: build context → AI summarize → create Task.
 
-**Tech Stack:** Salesforce Apex, Flow Builder XML, GenAI Prompt Templates (einstein_gpt__flex), Claude 4.5 Haiku via Bedrock
+**Tech Stack:** Salesforce Apex, Flow Builder XML, GenAI Prompt Templates (einstein_gpt\_\_flex), Claude 4.5 Haiku via Bedrock
 
 **Spec:** `docs/superpowers/specs/2026-03-11-salesforce-task-on-failure-design.md`
 
@@ -14,18 +14,18 @@
 
 ## File Structure
 
-| File | Responsibility |
-|---|---|
-| `force-app/main/default/classes/BuildFailureContext.cls` | Invocable: queries `Attendee_Assignment_Detail__c` records for a processing log, formats them into structured text for the AI prompt |
-| `force-app/main/default/classes/BuildFailureContext.cls-meta.xml` | Apex class metadata |
-| `force-app/main/default/classes/BuildFailureContextTest.cls` | Tests for BuildFailureContext |
-| `force-app/main/default/classes/BuildFailureContextTest.cls-meta.xml` | Test class metadata |
-| `force-app/main/default/classes/CreateFollowUpTask.cls` | Invocable: queries Mac Kitchin's User record, inserts a Task with the AI summary as description |
-| `force-app/main/default/classes/CreateFollowUpTask.cls-meta.xml` | Apex class metadata |
-| `force-app/main/default/classes/CreateFollowUpTaskTest.cls` | Tests for CreateFollowUpTask |
-| `force-app/main/default/classes/CreateFollowUpTaskTest.cls-meta.xml` | Test class metadata |
-| `force-app/main/default/genAiPromptTemplates/Attendee_Assignment_Failure_Summary.genAiPromptTemplate-meta.xml` | GenAI prompt template: takes structured failure context, returns plain-English narrative |
-| `force-app/main/default/flows/Event_Registration_Process_Attendee_Reply.flow-meta.xml` | Modified: adds `Decision_Needs_Task` on both branches, chains to BuildFailureContext → prompt → CreateFollowUpTask |
+| File                                                                                                           | Responsibility                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `force-app/main/default/classes/BuildFailureContext.cls`                                                       | Invocable: queries `Attendee_Assignment_Detail__c` records for a processing log, formats them into structured text for the AI prompt |
+| `force-app/main/default/classes/BuildFailureContext.cls-meta.xml`                                              | Apex class metadata                                                                                                                  |
+| `force-app/main/default/classes/BuildFailureContextTest.cls`                                                   | Tests for BuildFailureContext                                                                                                        |
+| `force-app/main/default/classes/BuildFailureContextTest.cls-meta.xml`                                          | Test class metadata                                                                                                                  |
+| `force-app/main/default/classes/CreateFollowUpTask.cls`                                                        | Invocable: queries Mac Kitchin's User record, inserts a Task with the AI summary as description                                      |
+| `force-app/main/default/classes/CreateFollowUpTask.cls-meta.xml`                                               | Apex class metadata                                                                                                                  |
+| `force-app/main/default/classes/CreateFollowUpTaskTest.cls`                                                    | Tests for CreateFollowUpTask                                                                                                         |
+| `force-app/main/default/classes/CreateFollowUpTaskTest.cls-meta.xml`                                           | Test class metadata                                                                                                                  |
+| `force-app/main/default/genAiPromptTemplates/Attendee_Assignment_Failure_Summary.genAiPromptTemplate-meta.xml` | GenAI prompt template: takes structured failure context, returns plain-English narrative                                             |
+| `force-app/main/default/flows/Event_Registration_Process_Attendee_Reply.flow-meta.xml`                         | Modified: adds `Decision_Needs_Task` on both branches, chains to BuildFailureContext → prompt → CreateFollowUpTask                   |
 
 ---
 
@@ -34,6 +34,7 @@
 ### Task 1: BuildFailureContext — Test class
 
 **Files:**
+
 - Create: `force-app/main/default/classes/BuildFailureContextTest.cls`
 - Create: `force-app/main/default/classes/BuildFailureContextTest.cls-meta.xml`
 
@@ -137,8 +138,14 @@ private class BuildFailureContextTest {
 
     System.assertEquals(1, results.size());
     String output = results[0].formattedContext;
-    System.assert(output.contains('Opportunity: Test Opp'), 'Should contain opp name');
-    System.assert(output.contains('PARTIAL_ASSIGNED'), 'Should contain status message');
+    System.assert(
+      output.contains('Opportunity: Test Opp'),
+      'Should contain opp name'
+    );
+    System.assert(
+      output.contains('PARTIAL_ASSIGNED'),
+      'Should contain status message'
+    );
     System.assert(
       output.contains('No detailed assignment records are available'),
       'Should contain no-records message'
@@ -194,9 +201,18 @@ private class BuildFailureContextTest {
     Test.stopTest();
 
     String output = results[0].formattedContext;
-    System.assert(output.contains('ASSIGNED ATTENDEES:'), 'Should have assigned section');
-    System.assert(output.contains('Jane Doe'), 'Should contain assigned attendee name');
-    System.assert(!output.contains('FAILED / SKIPPED ATTENDEES:'), 'No failure section expected');
+    System.assert(
+      output.contains('ASSIGNED ATTENDEES:'),
+      'Should have assigned section'
+    );
+    System.assert(
+      output.contains('Jane Doe'),
+      'Should contain assigned attendee name'
+    );
+    System.assert(
+      !output.contains('FAILED / SKIPPED ATTENDEES:'),
+      'No failure section expected'
+    );
   }
 
   @IsTest
@@ -245,13 +261,31 @@ private class BuildFailureContextTest {
     Test.stopTest();
 
     String output = results[0].formattedContext;
-    System.assert(output.contains('ASSIGNED ATTENDEES:'), 'Should have assigned section');
+    System.assert(
+      output.contains('ASSIGNED ATTENDEES:'),
+      'Should have assigned section'
+    );
     System.assert(output.contains('Jane Doe'), 'Should list assigned attendee');
-    System.assert(output.contains('FAILED / SKIPPED ATTENDEES:'), 'Should have failure section');
-    System.assert(output.contains('John Smith'), 'Should list skipped attendee');
-    System.assert(output.contains('Alice Jones'), 'Should list failed attendee');
-    System.assert(output.contains('No available open registration slot'), 'Should include skip reason');
-    System.assert(output.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), 'Should include DML error');
+    System.assert(
+      output.contains('FAILED / SKIPPED ATTENDEES:'),
+      'Should have failure section'
+    );
+    System.assert(
+      output.contains('John Smith'),
+      'Should list skipped attendee'
+    );
+    System.assert(
+      output.contains('Alice Jones'),
+      'Should list failed attendee'
+    );
+    System.assert(
+      output.contains('No available open registration slot'),
+      'Should include skip reason'
+    );
+    System.assert(
+      output.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'),
+      'Should include DML error'
+    );
   }
 
   @IsTest
@@ -261,15 +295,21 @@ private class BuildFailureContextTest {
     // Create enough detail records to exceed 10,000 characters
     List<Attendee_Assignment_Detail__c> details = new List<Attendee_Assignment_Detail__c>();
     for (Integer i = 0; i < 200; i++) {
-      details.add(new Attendee_Assignment_Detail__c(
-        Processing_Log__c = log.Id,
-        Assignment_Status__c = 'Skipped',
-        Extracted_Name__c = 'Attendee Number ' + i + ' With A Very Long Name To Fill Up Characters',
-        Extracted_Email__c = 'attendee' + i + '@example-long-domain-name-for-testing-truncation.com',
-        Event_Name__c = 'Very Long Event Name That Takes Up Space ' + i,
-        Product_Type__c = 'Association',
-        Assignment_Error__c = 'No available open registration slot for attendee. This is a detailed error message that takes up space.'
-      ));
+      details.add(
+        new Attendee_Assignment_Detail__c(
+          Processing_Log__c = log.Id,
+          Assignment_Status__c = 'Skipped',
+          Extracted_Name__c = 'Attendee Number ' +
+            i +
+            ' With A Very Long Name To Fill Up Characters',
+          Extracted_Email__c = 'attendee' +
+            i +
+            '@example-long-domain-name-for-testing-truncation.com',
+          Event_Name__c = 'Very Long Event Name That Takes Up Space ' + i,
+          Product_Type__c = 'Association',
+          Assignment_Error__c = 'No available open registration slot for attendee. This is a detailed error message that takes up space.'
+        )
+      );
     }
     insert details;
 
@@ -285,9 +325,18 @@ private class BuildFailureContextTest {
     Test.stopTest();
 
     String output = results[0].formattedContext;
-    System.assert(output.length() <= 10000, 'Output should be at most 10,000 characters, was: ' + output.length());
-    System.assert(output.contains('[truncated'), 'Should contain truncation marker');
-    System.assert(output.contains('Opportunity: Test Opp'), 'Header should always be preserved');
+    System.assert(
+      output.length() <= 10000,
+      'Output should be at most 10,000 characters, was: ' + output.length()
+    );
+    System.assert(
+      output.contains('[truncated'),
+      'Should contain truncation marker'
+    );
+    System.assert(
+      output.contains('Opportunity: Test Opp'),
+      'Header should always be preserved'
+    );
   }
 }
 ```
@@ -302,6 +351,7 @@ git commit -m "test: add BuildFailureContextTest test class (red)"
 ### Task 2: BuildFailureContext — Implementation
 
 **Files:**
+
 - Create: `force-app/main/default/classes/BuildFailureContext.cls`
 - Create: `force-app/main/default/classes/BuildFailureContext.cls-meta.xml`
 
@@ -362,32 +412,53 @@ public with sharing class BuildFailureContext {
 
   private static Result buildSingle(Request req) {
     Result r = new Result();
-    String header = 'Opportunity: ' + (req.opportunityName != null ? req.opportunityName : '') + '\n' +
-      'Overall Status: ' + (req.statusMessage != null ? req.statusMessage : '') + '\n';
+    String header =
+      'Opportunity: ' +
+      (req.opportunityName != null ? req.opportunityName : '') +
+      '\n' +
+      'Overall Status: ' +
+      (req.statusMessage != null ? req.statusMessage : '') +
+      '\n';
 
     if (req.processingLogId == null) {
-      r.formattedContext = header + '\nNo detailed assignment records are available for this run.';
+      r.formattedContext =
+        header + '\nNo detailed assignment records are available for this run.';
       return r;
     }
 
     List<Attendee_Assignment_Detail__c> assigned = [
-      SELECT Extracted_Name__c, Extracted_Email__c, Event_Name__c, Product_Type__c
+      SELECT
+        Extracted_Name__c,
+        Extracted_Email__c,
+        Event_Name__c,
+        Product_Type__c
       FROM Attendee_Assignment_Detail__c
-      WHERE Processing_Log__c = :req.processingLogId AND Assignment_Status__c = 'Assigned'
+      WHERE
+        Processing_Log__c = :req.processingLogId
+        AND Assignment_Status__c = 'Assigned'
       WITH USER_MODE
       ORDER BY CreatedDate ASC
     ];
 
     List<Attendee_Assignment_Detail__c> failedSkipped = [
-      SELECT Extracted_Name__c, Extracted_Email__c, Event_Name__c, Product_Type__c, Assignment_Error__c, Assignment_Status__c
+      SELECT
+        Extracted_Name__c,
+        Extracted_Email__c,
+        Event_Name__c,
+        Product_Type__c,
+        Assignment_Error__c,
+        Assignment_Status__c
       FROM Attendee_Assignment_Detail__c
-      WHERE Processing_Log__c = :req.processingLogId AND Assignment_Status__c IN ('Failed', 'Skipped')
+      WHERE
+        Processing_Log__c = :req.processingLogId
+        AND Assignment_Status__c IN ('Failed', 'Skipped')
       WITH USER_MODE
       ORDER BY CreatedDate ASC
     ];
 
     if (assigned.isEmpty() && failedSkipped.isEmpty()) {
-      r.formattedContext = header + '\nNo detailed assignment records are available for this run.';
+      r.formattedContext =
+        header + '\nNo detailed assignment records are available for this run.';
       return r;
     }
 
@@ -395,16 +466,33 @@ public with sharing class BuildFailureContext {
     for (Integer i = 0; i < assigned.size(); i++) {
       Attendee_Assignment_Detail__c d = assigned[i];
       assignedLines.add(
-        (i + 1) + '. ' + safe(d.Extracted_Name__c) + ' (' + safe(d.Extracted_Email__c) + ')' +
-        ' \u2014 Event: ' + safe(d.Event_Name__c) + ' | Product: ' + safe(d.Product_Type__c)
+        (i + 1) +
+          '. ' +
+          safe(d.Extracted_Name__c) +
+          ' (' +
+          safe(d.Extracted_Email__c) +
+          ')' +
+          ' \u2014 Event: ' +
+          safe(d.Event_Name__c) +
+          ' | Product: ' +
+          safe(d.Product_Type__c)
       );
     }
 
     List<String> failedLines = new List<String>();
     for (Integer i = 0; i < failedSkipped.size(); i++) {
       Attendee_Assignment_Detail__c d = failedSkipped[i];
-      String line = (i + 1) + '. ' + safe(d.Extracted_Name__c) + ' (' + safe(d.Extracted_Email__c) + ')' +
-        ' \u2014 Event: ' + safe(d.Event_Name__c) + ' | Product: ' + safe(d.Product_Type__c);
+      String line =
+        (i + 1) +
+        '. ' +
+        safe(d.Extracted_Name__c) +
+        ' (' +
+        safe(d.Extracted_Email__c) +
+        ')' +
+        ' \u2014 Event: ' +
+        safe(d.Event_Name__c) +
+        ' | Product: ' +
+        safe(d.Product_Type__c);
       if (String.isNotBlank(d.Assignment_Error__c)) {
         line += '\n   Reason: ' + d.Assignment_Error__c;
       }
@@ -413,13 +501,24 @@ public with sharing class BuildFailureContext {
 
     String fullOutput = header;
     if (!assignedLines.isEmpty()) {
-      fullOutput += '\nASSIGNED ATTENDEES:\n' + String.join(assignedLines, '\n') + '\n';
+      fullOutput +=
+        '\nASSIGNED ATTENDEES:\n' +
+        String.join(assignedLines, '\n') +
+        '\n';
     }
     if (!failedLines.isEmpty()) {
-      fullOutput += '\nFAILED / SKIPPED ATTENDEES:\n' + String.join(failedLines, '\n') + '\n';
+      fullOutput +=
+        '\nFAILED / SKIPPED ATTENDEES:\n' +
+        String.join(failedLines, '\n') +
+        '\n';
     }
 
-    r.formattedContext = truncateIfNeeded(fullOutput, header, assignedLines, failedLines);
+    r.formattedContext = truncateIfNeeded(
+      fullOutput,
+      header,
+      assignedLines,
+      failedLines
+    );
     return r;
   }
 
@@ -438,7 +537,12 @@ public with sharing class BuildFailureContext {
     List<String> trimmedAssigned = assignedLines;
     String marker = '\n[truncated \u2014 some records omitted]\n';
 
-    String attempt = buildOutput(header, trimmedAssigned, trimmedFailed, marker);
+    String attempt = buildOutput(
+      header,
+      trimmedAssigned,
+      trimmedFailed,
+      marker
+    );
     if (attempt.length() <= MAX_OUTPUT_LENGTH) {
       return attempt;
     }
@@ -448,20 +552,30 @@ public with sharing class BuildFailureContext {
     String assignedMarker = '\n[truncated \u2014 some assigned records omitted]\n';
 
     // Keep reducing until it fits
-    while (attempt.length() > MAX_OUTPUT_LENGTH && (trimmedFailed.size() > 1 || trimmedAssigned.size() > 1)) {
+    while (
+      attempt.length() > MAX_OUTPUT_LENGTH &&
+      (trimmedFailed.size() > 1 ||
+      trimmedAssigned.size() > 1)
+    ) {
       if (trimmedFailed.size() > 1) {
         trimmedFailed = trimFromMiddle(trimmedFailed);
       } else if (trimmedAssigned.size() > 1) {
         trimmedAssigned = trimFromMiddle(trimmedAssigned);
       }
-      attempt = buildOutput(header, trimmedAssigned, trimmedFailed,
+      attempt = buildOutput(
+        header,
+        trimmedAssigned,
+        trimmedFailed,
         (trimmedAssigned.size() < assignedLines.size() ? assignedMarker : '') +
-        (trimmedFailed.size() < failedLines.size() ? marker : ''));
+        (trimmedFailed.size() < failedLines.size() ? marker : '')
+      );
     }
 
     // Final safety: hard truncate if still over
     if (attempt.length() > MAX_OUTPUT_LENGTH) {
-      attempt = attempt.left(MAX_OUTPUT_LENGTH - 30) + '\n[truncated \u2014 output too large]';
+      attempt =
+        attempt.left(MAX_OUTPUT_LENGTH - 30) +
+        '\n[truncated \u2014 output too large]';
     }
 
     return attempt;
@@ -490,10 +604,16 @@ public with sharing class BuildFailureContext {
   ) {
     String output = header;
     if (!assignedLines.isEmpty()) {
-      output += '\nASSIGNED ATTENDEES:\n' + String.join(assignedLines, '\n') + '\n';
+      output +=
+        '\nASSIGNED ATTENDEES:\n' +
+        String.join(assignedLines, '\n') +
+        '\n';
     }
     if (!failedLines.isEmpty()) {
-      output += '\nFAILED / SKIPPED ATTENDEES:\n' + String.join(failedLines, '\n') + '\n';
+      output +=
+        '\nFAILED / SKIPPED ATTENDEES:\n' +
+        String.join(failedLines, '\n') +
+        '\n';
     }
     if (String.isNotBlank(markers)) {
       output += markers;
@@ -529,6 +649,7 @@ git commit -m "feat: add BuildFailureContext invocable Apex class"
 ### Task 3: CreateFollowUpTask — Test class
 
 **Files:**
+
 - Create: `force-app/main/default/classes/CreateFollowUpTaskTest.cls`
 - Create: `force-app/main/default/classes/CreateFollowUpTaskTest.cls-meta.xml`
 
@@ -594,23 +715,48 @@ private class CreateFollowUpTaskTest {
     Test.stopTest();
 
     System.assertEquals(1, results.size());
-    System.assertEquals(true, results[0].success, 'Task creation should succeed: ' + results[0].errorMessage);
+    System.assertEquals(
+      true,
+      results[0].success,
+      'Task creation should succeed: ' + results[0].errorMessage
+    );
 
     List<Task> tasks = [
-      SELECT Subject, WhatId, OwnerId, ActivityDate, Status, Priority, Description, Type
+      SELECT
+        Subject,
+        WhatId,
+        OwnerId,
+        ActivityDate,
+        Status,
+        Priority,
+        Description,
+        Type
       FROM Task
       WHERE WhatId = :opp.Id
     ];
     System.assertEquals(1, tasks.size(), 'One task should be created');
     Task t = tasks[0];
-    System.assert(t.Subject.startsWith('Review Attendee Assignment Failures'), 'Subject should start with expected prefix');
-    System.assert(t.Subject.contains('Task Test Opp'), 'Subject should contain opportunity name');
+    System.assert(
+      t.Subject.startsWith('Review Attendee Assignment Failures'),
+      'Subject should start with expected prefix'
+    );
+    System.assert(
+      t.Subject.contains('Task Test Opp'),
+      'Subject should contain opportunity name'
+    );
     System.assertEquals(opp.Id, t.WhatId, 'WhatId should be the Opportunity');
-    System.assertEquals(Date.today().addDays(30), t.ActivityDate, 'Due date should be today + 30');
+    System.assertEquals(
+      Date.today().addDays(30),
+      t.ActivityDate,
+      'Due date should be today + 30'
+    );
     System.assertEquals('Not Started', t.Status);
     System.assertEquals('Normal', t.Priority);
     System.assertEquals('Other', t.Type);
-    System.assert(t.Description.contains('3 attendees'), 'Description should contain AI summary');
+    System.assert(
+      t.Description.contains('3 attendees'),
+      'Description should contain AI summary'
+    );
   }
 
   @IsTest
@@ -632,8 +778,14 @@ private class CreateFollowUpTaskTest {
     System.assertEquals(true, results[0].success);
 
     Task t = [SELECT Description FROM Task WHERE WhatId = :opp.Id LIMIT 1];
-    System.assert(t.Description.contains('No slots available'), 'Fallback should include statusMessage');
-    System.assert(t.Description.contains('AI summary was unavailable'), 'Fallback should note AI was unavailable');
+    System.assert(
+      t.Description.contains('No slots available'),
+      'Fallback should include statusMessage'
+    );
+    System.assert(
+      t.Description.contains('AI summary was unavailable'),
+      'Fallback should note AI was unavailable'
+    );
   }
 
   @IsTest
@@ -661,7 +813,10 @@ private class CreateFollowUpTaskTest {
     System.assertEquals(true, results[0].success);
 
     Task t = [SELECT Subject FROM Task WHERE WhatId = :opp.Id LIMIT 1];
-    System.assert(t.Subject.length() <= 255, 'Subject must not exceed 255 chars, was: ' + t.Subject.length());
+    System.assert(
+      t.Subject.length() <= 255,
+      'Subject must not exceed 255 chars, was: ' + t.Subject.length()
+    );
   }
 
   @IsTest
@@ -682,10 +837,18 @@ private class CreateFollowUpTaskTest {
     );
     Test.stopTest();
 
-    System.assertEquals(true, results[0].success, 'Should succeed with fallback owner');
+    System.assertEquals(
+      true,
+      results[0].success,
+      'Should succeed with fallback owner'
+    );
 
     Task t = [SELECT OwnerId FROM Task WHERE WhatId = :opp.Id LIMIT 1];
-    System.assertEquals(UserInfo.getUserId(), t.OwnerId, 'Should fall back to running user');
+    System.assertEquals(
+      UserInfo.getUserId(),
+      t.OwnerId,
+      'Should fall back to running user'
+    );
   }
 }
 ```
@@ -700,6 +863,7 @@ git commit -m "test: add CreateFollowUpTaskTest test class (red)"
 ### Task 4: CreateFollowUpTask — Implementation
 
 **Files:**
+
 - Create: `force-app/main/default/classes/CreateFollowUpTask.cls`
 - Create: `force-app/main/default/classes/CreateFollowUpTask.cls-meta.xml`
 
@@ -736,13 +900,19 @@ public with sharing class CreateFollowUpTask {
     @InvocableVariable(label='Opportunity ID' required=true)
     public Id opportunityId;
 
-    @InvocableVariable(label='AI Summary' description='AI-generated narrative for the Task description')
+    @InvocableVariable(
+      label='AI Summary'
+      description='AI-generated narrative for the Task description'
+    )
     public String aiSummary;
 
     @InvocableVariable(label='Opportunity Name' required=true)
     public String opportunityName;
 
-    @InvocableVariable(label='Status Message' description='Fallback if AI summary is blank')
+    @InvocableVariable(
+      label='Status Message'
+      description='Fallback if AI summary is blank'
+    )
     public String statusMessage;
   }
 
@@ -781,13 +951,16 @@ public with sharing class CreateFollowUpTask {
       if (String.isNotBlank(req.aiSummary)) {
         description = req.aiSummary;
       } else {
-        description = 'Attendee assignment completed with status: ' +
+        description =
+          'Attendee assignment completed with status: ' +
           (req.statusMessage != null ? req.statusMessage : 'Unknown') +
           '. AI summary was unavailable.';
       }
 
       // Build subject (truncate opportunity name to fit within 255-char limit)
-      String oppName = req.opportunityName != null ? req.opportunityName.left(MAX_NAME_IN_SUBJECT) : '';
+      String oppName = req.opportunityName != null
+        ? req.opportunityName.left(MAX_NAME_IN_SUBJECT)
+        : '';
       String subject = SUBJECT_PREFIX + oppName;
 
       Task t = new Task(
@@ -801,7 +974,11 @@ public with sharing class CreateFollowUpTask {
         Type = 'Other'
       );
 
-      Database.SaveResult sr = Database.insert(t, true, AccessLevel.SYSTEM_MODE);
+      Database.SaveResult sr = Database.insert(
+        t,
+        true,
+        AccessLevel.SYSTEM_MODE
+      );
       r.success = sr.isSuccess();
       r.taskId = t.Id;
       if (!sr.isSuccess()) {
@@ -822,7 +999,7 @@ public with sharing class CreateFollowUpTask {
     List<User> users = [
       SELECT Id
       FROM User
-      WHERE Email = :ASSIGNEE_EMAIL AND IsActive = true
+      WHERE Email = :ASSIGNEE_EMAIL AND IsActive = TRUE
       WITH SYSTEM_MODE
       LIMIT 1
     ];
@@ -833,7 +1010,9 @@ public with sharing class CreateFollowUpTask {
 
     System.debug(
       LoggingLevel.WARN,
-      'CreateFollowUpTask: User with email ' + ASSIGNEE_EMAIL + ' not found. Falling back to running user.'
+      'CreateFollowUpTask: User with email ' +
+        ASSIGNEE_EMAIL +
+        ' not found. Falling back to running user.'
     );
     return UserInfo.getUserId();
   }
@@ -862,6 +1041,7 @@ git commit -m "feat: add CreateFollowUpTask invocable Apex class"
 ### Task 5: Attendee_Assignment_Failure_Summary prompt template
 
 **Files:**
+
 - Create: `force-app/main/default/genAiPromptTemplates/Attendee_Assignment_Failure_Summary.genAiPromptTemplate-meta.xml`
 
 **Reference:** Study the existing template at `force-app/main/default/genAiPromptTemplates/Extract_Attendee_Information.genAiPromptTemplate-meta.xml` for the XML structure. The new template differs in that it takes a free-text String input (not an SObject reference).
@@ -873,14 +1053,17 @@ Write to `force-app/main/default/genAiPromptTemplates/Attendee_Assignment_Failur
 **Important:** The `versionIdentifier` value must be unique. Use a placeholder that the deployment will auto-generate, or compute a hash. For initial deployment, use a simple identifier. The `activeVersionIdentifier` must match the version you want active.
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
-    <activeVersionIdentifier>Attendee_Assignment_Failure_Summary_v1</activeVersionIdentifier>
-    <description>Generates a plain-English summary of attendee assignment failures for use as a Salesforce Task description.</description>
+    <activeVersionIdentifier
+  >Attendee_Assignment_Failure_Summary_v1</activeVersionIdentifier>
+    <description
+  >Generates a plain-English summary of attendee assignment failures for use as a Salesforce Task description.</description>
     <developerName>Attendee_Assignment_Failure_Summary</developerName>
     <masterLabel>Attendee Assignment Failure Summary</masterLabel>
     <templateVersions>
-        <content>You are an operations assistant for Connect Meetings event registrations.
+        <content
+    >You are an operations assistant for Connect Meetings event registrations.
 
 Your task is to write a clear, plain-English summary of an attendee assignment processing run that had failures. This summary will be placed into a Salesforce Task description for a human operator to review.
 
@@ -912,9 +1095,11 @@ ASSIGNMENT DATA:
             <referenceName>Input:FailureContext</referenceName>
             <required>true</required>
         </inputs>
-        <primaryModel>sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
+        <primaryModel
+    >sfdc_ai__DefaultBedrockAnthropicClaude45Haiku</primaryModel>
         <status>Published</status>
-        <versionIdentifier>Attendee_Assignment_Failure_Summary_v1</versionIdentifier>
+        <versionIdentifier
+    >Attendee_Assignment_Failure_Summary_v1</versionIdentifier>
     </templateVersions>
     <type>einstein_gpt__flex</type>
     <visibility>Global</visibility>
@@ -922,6 +1107,7 @@ ASSIGNMENT DATA:
 ```
 
 **Key differences from `Extract_Attendee_Information`:**
+
 - Input uses `definition>primitive://String</definition>` instead of `SOBJECT://EmailMessage` — this is a free-text string input, not an SObject reference.
 - `referenceName` is `Input:FailureContext` which is how the Flow maps `varFormattedContext` to it.
 
@@ -939,6 +1125,7 @@ git commit -m "feat: add Attendee_Assignment_Failure_Summary GenAI prompt templa
 ### Task 6: Modify the Flow XML
 
 **Files:**
+
 - Modify: `force-app/main/default/flows/Event_Registration_Process_Attendee_Reply.flow-meta.xml`
 
 This task modifies the existing flow to add the `Decision_Needs_Task` decision and the three new action steps. The flow XML is declarative — each change is a specific block of XML to insert or modify.
@@ -946,6 +1133,7 @@ This task modifies the existing flow to add the `Decision_Needs_Task` decision a
 **Understanding the current flow structure (critical context):**
 
 The current flow has this decision at line 516:
+
 ```xml
 <decisions>
     <name>Decision_Is_Success</name>
@@ -963,6 +1151,7 @@ The success path ends at `Action_Send_Success_Notification` (no outbound connect
 The failure path ends at `Action_Send_Failure_Notification` (no outbound connector — terminal node).
 
 We need to:
+
 1. Add `varFormattedContext` variable
 2. Add a `Decision_Needs_Task` decision node
 3. Add `Build_Failure_Context` action call
@@ -976,7 +1165,7 @@ We need to:
 Add this variable to the `<variables>` section of the flow (after the existing `varStatusMessage` variable block, before the closing `</Flow>` tag):
 
 ```xml
-    <variables>
+<variables>
         <name>varFormattedContext</name>
         <dataType>String</dataType>
         <isCollection>false</isCollection>
@@ -990,8 +1179,9 @@ Add this variable to the `<variables>` section of the flow (after the existing `
 Add this decision block after the existing `Decision_Is_Success` decisions block:
 
 ```xml
-    <decisions>
-        <description>Checks whether a follow-up Task should be created. Fires for Partial Success and Failed outcomes.</description>
+<decisions>
+        <description
+  >Checks whether a follow-up Task should be created. Fires for Partial Success and Failed outcomes.</description>
         <name>Decision_Needs_Task</name>
         <label>Needs Follow-Up Task?</label>
         <locationX>176</locationX>
@@ -1020,9 +1210,11 @@ Add this decision block after the existing `Decision_Is_Success` decisions block
 Add these three action call blocks (after the existing action calls):
 
 **Build_Failure_Context:**
+
 ```xml
-    <actionCalls>
-        <description>Queries assignment detail records and formats them for the AI summary prompt.</description>
+<actionCalls>
+        <description
+  >Queries assignment detail records and formats them for the AI summary prompt.</description>
         <name>Build_Failure_Context</name>
         <label>Build Failure Context</label>
         <locationX>50</locationX>
@@ -1051,7 +1243,8 @@ Add these three action call blocks (after the existing action calls):
         <inputParameters>
             <name>opportunityName</name>
             <value>
-                <elementReference>Get_Opportunity_Details.Name</elementReference>
+                <elementReference
+      >Get_Opportunity_Details.Name</elementReference>
             </value>
         </inputParameters>
         <nameSegment>BuildFailureContext</nameSegment>
@@ -1064,9 +1257,11 @@ Add these three action call blocks (after the existing action calls):
 ```
 
 **Generate_Failure_Summary:**
+
 ```xml
-    <actionCalls>
-        <description>Calls the AI prompt template to generate a plain-English failure summary.</description>
+<actionCalls>
+        <description
+  >Calls the AI prompt template to generate a plain-English failure summary.</description>
         <name>Generate_Failure_Summary</name>
         <label>Generate Failure Summary</label>
         <locationX>50</locationX>
@@ -1093,9 +1288,11 @@ Add these three action call blocks (after the existing action calls):
 ```
 
 **Create_Follow_Up_Task:**
+
 ```xml
-    <actionCalls>
-        <description>Creates a Salesforce Task assigned to Mac Kitchin with the AI-generated failure summary.</description>
+<actionCalls>
+        <description
+  >Creates a Salesforce Task assigned to Mac Kitchin with the AI-generated failure summary.</description>
         <name>Create_Follow_Up_Task</name>
         <label>Create Follow-Up Task</label>
         <locationX>50</locationX>
@@ -1115,13 +1312,15 @@ Add these three action call blocks (after the existing action calls):
         <inputParameters>
             <name>aiSummary</name>
             <value>
-                <elementReference>Generate_Failure_Summary.promptResponse</elementReference>
+                <elementReference
+      >Generate_Failure_Summary.promptResponse</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
             <name>opportunityName</name>
             <value>
-                <elementReference>Get_Opportunity_Details.Name</elementReference>
+                <elementReference
+      >Get_Opportunity_Details.Name</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -1142,7 +1341,7 @@ The success email node is currently terminal (no `<connector>`). Add a connector
 Find the `Action_Send_Success_Notification` action call block (starts at line 69). After the closing `</inputParameters>` for `logEmailOnSend` and before `<nameSegment>`, add:
 
 ```xml
-        <connector>
+<connector>
             <targetReference>Decision_Needs_Task</targetReference>
         </connector>
 ```
@@ -1154,7 +1353,7 @@ Same pattern — the failure email node is currently terminal. Add a connector.
 Find the `Action_Send_Failure_Notification` action call block (starts at line 3). After the closing `</inputParameters>` for `logEmailOnSend` and before `<nameSegment>`, add:
 
 ```xml
-        <connector>
+<connector>
             <targetReference>Decision_Needs_Task</targetReference>
         </connector>
 ```
@@ -1232,6 +1431,7 @@ sf project deploy start -o <alias> \
 - [ ] **Step 3: Verify in Flow Builder**
 
 Open Flow Builder in the target org and verify:
+
 1. `Decision_Needs_Task` node appears after both email send nodes
 2. Both `Action_Send_Success_Notification` and `Action_Send_Failure_Notification` connect to `Decision_Needs_Task`
 3. The "Task Needed" path chains: `Build_Failure_Context` → `Generate_Failure_Summary` → `Create_Follow_Up_Task`
@@ -1242,6 +1442,7 @@ Open Flow Builder in the target org and verify:
 Add the new classes and prompt template to the deployment command in `README.md`:
 
 In the `## Deployment` section, add these lines to the `sf project deploy start` command:
+
 ```
   --metadata ApexClass:BuildFailureContext \
   --metadata ApexClass:BuildFailureContextTest \
@@ -1251,6 +1452,7 @@ In the `## Deployment` section, add these lines to the `sf project deploy start`
 ```
 
 And add these test flags:
+
 ```
   --tests BuildFailureContextTest \
   --tests CreateFollowUpTaskTest

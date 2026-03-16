@@ -17,6 +17,7 @@ This is additive — existing email notifications are unchanged.
 ## Trigger Conditions
 
 A Task is created when `ProcessAppointmentTakerAttendees` returns `finalStatus` of either:
+
 - `Partial Success` — some attendees assigned, some skipped or failed
 - `Failed` — no attendees could be assigned, or a processing error occurred
 
@@ -31,7 +32,7 @@ A Task is **not** created on `Success`.
 - No matching OLI slots found → `isSuccess = true`, `finalStatus = 'Failed'`
 - `toUpdate` is empty after processing → `isSuccess = true`, `finalStatus = 'Failed'`
 
-Only the path where `successCount == 0` *and* there are DML errors sets `isSuccess = false`. The existing Flow decision branches on `varIsSuccess`, meaning **all of the above Failed paths** exit through the success branch, not the failure branch.
+Only the path where `successCount == 0` _and_ there are DML errors sets `isSuccess = false`. The existing Flow decision branches on `varIsSuccess`, meaning **all of the above Failed paths** exit through the success branch, not the failure branch.
 
 This means a `Decision_Needs_Task` node on **only** the non-success branch would miss most failure cases. The second decision node must be placed on **both** branches.
 
@@ -63,6 +64,7 @@ Concretely: both the success and non-success paths get a `Decision_Needs_Task` n
 | `opportunityName` | String | Yes | Opportunity name (for context) |
 
 **Null `processingLogId` handling:** If `processingLogId` is null (e.g. because `Create_Attendee_Processing_Log` faulted), the class skips the SOQL queries and returns a minimal context block using only `opportunityName` and `statusMessage`:
+
 ```
 Opportunity: <name>
 Overall Status: <statusMessage>
@@ -71,6 +73,7 @@ No detailed assignment records are available for this run.
 ```
 
 **What it does (when processingLogId is present):**
+
 1. Queries `Attendee_Assignment_Detail__c` WHERE `Processing_Log__c = processingLogId` AND `Assignment_Status__c = 'Assigned'` WITH USER_MODE — for the success context
 2. Queries `Attendee_Assignment_Detail__c` WHERE `Processing_Log__c = processingLogId` AND `Assignment_Status__c IN ('Failed', 'Skipped')` WITH USER_MODE — for the failure detail
 3. Formats all records into a structured text block:
@@ -94,6 +97,7 @@ FAILED / SKIPPED ATTENDEES:
 | `formattedContext` | String | The structured text block, truncated to 10,000 characters from the end (preserving the header, truncating older detail lines from the middle if necessary). A `[truncated]` marker is appended if truncation occurred. |
 
 **Truncation strategy:** Build the full string; if `length() > 10000`, apply truncation in this order:
+
 1. First drop complete attendee lines from the middle of the failed/skipped section until it fits, then append `\n[truncated — some records omitted]`.
 2. If the header + full assigned section alone exceeds 10,000 characters (e.g., hundreds of assigned attendees), also trim complete assigned attendee lines from the end of the assigned section, appending `\n[truncated — some assigned records omitted]`.
 3. The header block (`Opportunity:` + `Overall Status:`) and at least the first entry in each section are always preserved regardless of length.
@@ -120,6 +124,7 @@ FAILED / SKIPPED ATTENDEES:
 The Flow invokes this template via `actionType: generatePromptResponse` with input parameter name `Input:FailureContext` mapped to `varFormattedContext`, using `<storeOutputAutomatically>true</storeOutputAutomatically>` — identical to how `Extract_Attendee_Information` is invoked. The prompt response is then referenced in the Flow as `Attendee_Assignment_Failure_Summary.promptResponse` (not via a separate named variable). **`varAiSummary` is therefore not a declared flow variable** — the `CreateFollowUpTask` input mapping uses `Attendee_Assignment_Failure_Summary.promptResponse` directly.
 
 **Prompt behaviour:** The prompt instructs the model to:
+
 - Summarise what happened (how many attendees were provided, how many assigned)
 - List who was assigned successfully (if any)
 - List who could not be assigned, with plain-English explanation of each failure reason
@@ -144,6 +149,7 @@ The Flow invokes this template via `actionType: generatePromptResponse` with inp
 | `statusMessage` | String | No | Fallback content if `aiSummary` is blank |
 
 **What it does:**
+
 1. Queries `User` WHERE `Email = 'mac.kitchin@informa.com'` WITH SYSTEM_MODE, LIMIT 1.
    - **Rationale for SYSTEM_MODE:** The flow runs as the Automated Process system user, whose profile may not have visibility into the User object. SYSTEM_MODE ensures the lookup always works, consistent with the write-side approach in `ProcessAppointmentTakerAttendees`.
    - Falls back to `UserInfo.getUserId()` if no match found. Logs a warning via `System.debug(LoggingLevel.WARN, ...)`.
@@ -153,16 +159,16 @@ The Flow invokes this template via `actionType: generatePromptResponse` with inp
 3. Builds Task subject: `'Review Attendee Assignment Failures — ' + opportunityName.left(200)`
 4. Inserts a `Task` with `AccessLevel.SYSTEM_MODE`:
 
-| Task Field | Value |
-|---|---|
-| `Subject` | `'Review Attendee Assignment Failures — ' + opportunityName.left(200)` |
-| `WhatId` | `opportunityId` |
-| `OwnerId` | Mac Kitchin's User Id (or running user fallback) |
-| `ActivityDate` | `Date.today().addDays(30)` |
-| `Status` | `Not Started` |
-| `Priority` | `Normal` |
-| `Description` | `aiSummary` or fallback string |
-| `Type` | `Other` |
+| Task Field     | Value                                                                  |
+| -------------- | ---------------------------------------------------------------------- |
+| `Subject`      | `'Review Attendee Assignment Failures — ' + opportunityName.left(200)` |
+| `WhatId`       | `opportunityId`                                                        |
+| `OwnerId`      | Mac Kitchin's User Id (or running user fallback)                       |
+| `ActivityDate` | `Date.today().addDays(30)`                                             |
+| `Status`       | `Not Started`                                                          |
+| `Priority`     | `Normal`                                                               |
+| `Description`  | `aiSummary` or fallback string                                         |
+| `Type`         | `Other`                                                                |
 
 **Pattern:** Follows `AttendeeAssignmentDetailLogger` — small, single-purpose invocable.
 
@@ -174,8 +180,8 @@ The Flow invokes this template via `actionType: generatePromptResponse` with inp
 
 One new String variable must be added to the flow's `<variables>` block:
 
-| Variable API Name | Type | Description |
-|---|---|---|
+| Variable API Name     | Type   | Description                                                             |
+| --------------------- | ------ | ----------------------------------------------------------------------- |
 | `varFormattedContext` | String | Output of `BuildFailureContext`; passed as input to the prompt template |
 
 `varAiSummary` is **not** a declared variable. Because `Attendee_Assignment_Failure_Summary` uses `storeOutputAutomatically = true`, its output is referenced directly as `Attendee_Assignment_Failure_Summary.promptResponse` in the `CreateFollowUpTask` input mapping — the same pattern used by `Extract_Attendee_Information.promptResponse`.
@@ -284,34 +290,35 @@ Description:
 
 ## Files to Create / Modify
 
-| File | Action |
-|---|---|
-| `force-app/main/default/classes/BuildFailureContext.cls` | Create |
-| `force-app/main/default/classes/BuildFailureContext.cls-meta.xml` | Create |
-| `force-app/main/default/classes/BuildFailureContextTest.cls` | Create |
-| `force-app/main/default/classes/BuildFailureContextTest.cls-meta.xml` | Create |
-| `force-app/main/default/classes/CreateFollowUpTask.cls` | Create |
-| `force-app/main/default/classes/CreateFollowUpTask.cls-meta.xml` | Create |
-| `force-app/main/default/classes/CreateFollowUpTaskTest.cls` | Create |
-| `force-app/main/default/classes/CreateFollowUpTaskTest.cls-meta.xml` | Create |
+| File                                                                                                           | Action |
+| -------------------------------------------------------------------------------------------------------------- | ------ |
+| `force-app/main/default/classes/BuildFailureContext.cls`                                                       | Create |
+| `force-app/main/default/classes/BuildFailureContext.cls-meta.xml`                                              | Create |
+| `force-app/main/default/classes/BuildFailureContextTest.cls`                                                   | Create |
+| `force-app/main/default/classes/BuildFailureContextTest.cls-meta.xml`                                          | Create |
+| `force-app/main/default/classes/CreateFollowUpTask.cls`                                                        | Create |
+| `force-app/main/default/classes/CreateFollowUpTask.cls-meta.xml`                                               | Create |
+| `force-app/main/default/classes/CreateFollowUpTaskTest.cls`                                                    | Create |
+| `force-app/main/default/classes/CreateFollowUpTaskTest.cls-meta.xml`                                           | Create |
 | `force-app/main/default/genAiPromptTemplates/Attendee_Assignment_Failure_Summary.genAiPromptTemplate-meta.xml` | Create |
-| `force-app/main/default/flows/Event_Registration_Process_Attendee_Reply.flow-meta.xml` | Modify |
+| `force-app/main/default/flows/Event_Registration_Process_Attendee_Reply.flow-meta.xml`                         | Modify |
 
 ---
 
 ## Security Model
 
-| Class | Operation | Mode | Rationale |
-|---|---|---|---|
-| `BuildFailureContext` | SOQL reads on `Attendee_Assignment_Detail__c` | `WITH USER_MODE` | Standard read enforcement consistent with existing classes |
-| `CreateFollowUpTask` | SOQL lookup of `User` by email | `WITH SYSTEM_MODE` | Automated Process user profile may not have User object visibility |
-| `CreateFollowUpTask` | `Task` insert | `AccessLevel.SYSTEM_MODE` | Automated process user needs to write Task fields regardless of FLS |
+| Class                 | Operation                                     | Mode                      | Rationale                                                           |
+| --------------------- | --------------------------------------------- | ------------------------- | ------------------------------------------------------------------- |
+| `BuildFailureContext` | SOQL reads on `Attendee_Assignment_Detail__c` | `WITH USER_MODE`          | Standard read enforcement consistent with existing classes          |
+| `CreateFollowUpTask`  | SOQL lookup of `User` by email                | `WITH SYSTEM_MODE`        | Automated Process user profile may not have User object visibility  |
+| `CreateFollowUpTask`  | `Task` insert                                 | `AccessLevel.SYSTEM_MODE` | Automated process user needs to write Task fields regardless of FLS |
 
 ---
 
 ## Testing
 
 `BuildFailureContextTest`:
+
 - Returns minimal context block when `processingLogId` is null (no SOQL, uses statusMessage only)
 - Returns minimal context block when no detail records exist for the log
 - Formats correctly with Assigned records only (no failures)
@@ -319,6 +326,7 @@ Description:
 - Correctly truncates output to ≤ 10,000 characters and appends `[truncated]` marker
 
 `CreateFollowUpTaskTest`:
+
 - Creates Task with correct `WhatId`, `OwnerId` (matched by email), `ActivityDate` (today + 30), Subject, Description
 - Subject truncates `opportunityName` correctly when > 200 characters
 - Falls back to running user's ID when `mac.kitchin@informa.com` is not found; logs a warning
@@ -330,6 +338,7 @@ Description:
 ## Deployment
 
 Add to the existing deploy command:
+
 ```bash
 --metadata ApexClass:BuildFailureContext \
 --metadata ApexClass:BuildFailureContextTest \

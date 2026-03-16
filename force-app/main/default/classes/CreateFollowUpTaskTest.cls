@@ -55,12 +55,25 @@ private class CreateFollowUpTaskTest {
     System.assertNotEquals(null, results[0].taskId, 'Should return a task ID');
 
     Task createdTask = [
-      SELECT Id, WhatId, OwnerId, ActivityDate, Subject, Description, Status, Priority, Type
+      SELECT
+        Id,
+        WhatId,
+        OwnerId,
+        ActivityDate,
+        Subject,
+        Description,
+        Status,
+        Priority,
+        Type
       FROM Task
       WHERE Id = :results[0].taskId
     ];
 
-    System.assertEquals(opp.Id, createdTask.WhatId, 'WhatId should be the opportunity');
+    System.assertEquals(
+      opp.Id,
+      createdTask.WhatId,
+      'WhatId should be the opportunity'
+    );
     System.assertEquals(
       UserInfo.getUserId(),
       createdTask.OwnerId,
@@ -81,8 +94,16 @@ private class CreateFollowUpTaskTest {
       createdTask.Description,
       'Description should be the aiSummary'
     );
-    System.assertEquals('Not Started', createdTask.Status, 'Status should be Not Started');
-    System.assertEquals('Normal', createdTask.Priority, 'Priority should be Normal');
+    System.assertEquals(
+      'Not Started',
+      createdTask.Status,
+      'Status should be Not Started'
+    );
+    System.assertEquals(
+      'Normal',
+      createdTask.Priority,
+      'Priority should be Normal'
+    );
     System.assertEquals('Other', createdTask.Type, 'Type should be Other');
   }
 
@@ -119,7 +140,8 @@ private class CreateFollowUpTaskTest {
       WHERE Id = :results[0].taskId
     ];
 
-    String expectedSubject = 'Review Attendee Assignment Failures \u2014 ' + longName.left(200);
+    String expectedSubject =
+      'Review Attendee Assignment Failures \u2014 ' + longName.left(200);
     System.assertEquals(
       expectedSubject,
       createdTask.Subject,
