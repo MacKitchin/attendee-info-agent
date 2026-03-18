@@ -22,30 +22,10 @@ public with sharing class ProcessAppointmentTakerAttendees {
   }
 
   /**
-   * @description Result wrapper for invocable method.
-   *
-   * Signal semantics (important — read before adding Flow branches):
-   *
-   *   isSuccess   — TRUE when the Apex method completed without a system/runtime
-   *                 error (JSON parse succeeded, DML did not throw, etc.).
-   *                 FALSE only for hard failures: invalid JSON, missing opportunityId,
-   *                 null request, or a complete DML failure with zero assignments.
-   *                 Do NOT use isSuccess to drive success-vs-failure notification
-   *                 emails; use finalStatus for that.
-   *
-   *   finalStatus — The authoritative business outcome.  Use this for all routing:
-   *                   'Success'        — every provided attendee was assigned
-   *                   'Partial Success'— at least one attendee assigned, not all
-   *                   'Failed'         — zero attendees assigned (any reason)
-   *
-   * The Flow's Decision_Is_Success node evaluates finalStatus == 'Success', not
-   * isSuccess, so that Partial Success and Failed outcomes both reach the failure
-   * notification path even when isSuccess is true.
+   * @description Result wrapper for invocable method
    */
   public class Result {
-    @InvocableVariable(
-      description='True if Apex completed without a system error. NOT a business-success signal — use finalStatus for Flow routing.'
-    )
+    @InvocableVariable
     public Boolean isSuccess;
     @InvocableVariable
     public String statusMessage;
@@ -57,9 +37,7 @@ public with sharing class ProcessAppointmentTakerAttendees {
     public Integer attendeesNotAssigned;
     @InvocableVariable
     public Integer openSlotsRemaining;
-    @InvocableVariable(
-      description='Authoritative business outcome: Success | Partial Success | Failed. Use this for Flow routing, not isSuccess.'
-    )
+    @InvocableVariable
     public String finalStatus;
     @InvocableVariable
     public String errorCategory;
