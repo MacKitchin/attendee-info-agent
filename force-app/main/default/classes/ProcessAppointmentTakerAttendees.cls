@@ -22,10 +22,30 @@ public with sharing class ProcessAppointmentTakerAttendees {
   }
 
   /**
-   * @description Result wrapper for invocable method
+   * @description Result wrapper for invocable method.
+   *
+   * Signal semantics (important — read before adding Flow branches):
+   *
+   *   isSuccess   — TRUE when the Apex method completed without a system/runtime
+   *                 error (JSON parse succeeded, DML did not throw, etc.).
+   *                 FALSE only for hard failures: invalid JSON, missing opportunityId,
+   *                 null request, or a complete DML failure with zero assignments.
+   *                 Do NOT use isSuccess to drive success-vs-failure notification
+   *                 emails; use finalStatus for that.
+   *
+   *   finalStatus — The authoritative business outcome.  Use this for all routing:
+   *                   'Success'        — every provided attendee was assigned
+   *                   'Partial Success'— at least one attendee assigned, not all
+   *                   'Failed'         — zero attendees assigned (any reason)
+   *
+   * The Flow's Decision_Is_Success node evaluates finalStatus == 'Success', not
+   * isSuccess, so that Partial Success and Failed outcomes both reach the failure
+   * notification path even when isSuccess is true.
    */
   public class Result {
-    @InvocableVariable
+    @InvocableVariable(
+      description='True if Apex completed without a system error. NOT a business-success signal — use finalStatus for Flow routing.'
+    )
     public Boolean isSuccess;
     @InvocableVariable
     public String statusMessage;
@@ -37,7 +57,9 @@ public with sharing class ProcessAppointmentTakerAttendees {
     public Integer attendeesNotAssigned;
     @InvocableVariable
     public Integer openSlotsRemaining;
-    @InvocableVariable
+    @InvocableVariable(
+      description='Authoritative business outcome: Success | Partial Success | Failed. Use this for Flow routing, not isSuccess.'
+    )
     public String finalStatus;
     @InvocableVariable
     public String errorCategory;
@@ -324,7 +346,9 @@ public with sharing class ProcessAppointmentTakerAttendees {
         );
 
         // Build clean SObject to avoid USER_MODE FLS errors on relationship fields
-        OpportunityLineItem lineItemUpdate = new OpportunityLineItem(Id = target.Id);
+        OpportunityLineItem lineItemUpdate = new OpportunityLineItem(
+          Id = target.Id
+        );
         lineItemUpdate.Attendee_First_Name__c = a.firstName;
         lineItemUpdate.Attendee_Name__c =
           a.firstName + (String.isNotBlank(a.lastName) ? ' ' + a.lastName : '');
@@ -670,16 +694,20 @@ public with sharing class ProcessAppointmentTakerAttendees {
         continue;
       }
       Map<String, Object> attendeeFields = (Map<String, Object>) row;
-      String firstName = (attendeeFields.containsKey('first_name') && attendeeFields.get('first_name') != null)
+      String firstName = (attendeeFields.containsKey('first_name') &&
+        attendeeFields.get('first_name') != null)
         ? String.valueOf(attendeeFields.get('first_name')).trim()
         : null;
-      String lastName = (attendeeFields.containsKey('last_name') && attendeeFields.get('last_name') != null)
+      String lastName = (attendeeFields.containsKey('last_name') &&
+        attendeeFields.get('last_name') != null)
         ? String.valueOf(attendeeFields.get('last_name')).trim()
         : null;
-      String email = (attendeeFields.containsKey('email') && attendeeFields.get('email') != null)
+      String email = (attendeeFields.containsKey('email') &&
+        attendeeFields.get('email') != null)
         ? String.valueOf(attendeeFields.get('email')).trim()
         : null;
-      String eventName = (attendeeFields.containsKey('event_name') && attendeeFields.get('event_name') != null)
+      String eventName = (attendeeFields.containsKey('event_name') &&
+        attendeeFields.get('event_name') != null)
         ? String.valueOf(attendeeFields.get('event_name')).trim()
         : null;
       String productType = (attendeeFields.containsKey('product_type') &&
@@ -693,7 +721,9 @@ public with sharing class ProcessAppointmentTakerAttendees {
       }
       if (lastName == null)
         lastName = '';
-      parsedAttendees.add(new Attendee(firstName, lastName, email, eventName, productType));
+      parsedAttendees.add(
+        new Attendee(firstName, lastName, email, eventName, productType)
+      );
     }
     return parsedAttendees;
   }

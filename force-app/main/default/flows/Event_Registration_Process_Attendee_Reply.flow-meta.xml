@@ -657,6 +657,8 @@ Status Message: {!varStatusMessage}</stringValue>
         </assignmentItems>
     </assignments>
     <decisions>
+        <description
+    >Routes to the success email only when all attendees were fully assigned (finalStatus = &apos;Success&apos;). Partial Success, Failed, and no-op outcomes all route to the failure path so the notification email subject accurately reflects the outcome. isSuccess is preserved for fault-path detection but is no longer the routing signal here.</description>
         <name>Decision_Is_Success</name>
         <label>Is Success?</label>
         <locationX>176</locationX>
@@ -665,15 +667,15 @@ Status Message: {!varStatusMessage}</stringValue>
             <targetReference
       >Update_Processing_Log_Failure_Result</targetReference>
         </defaultConnector>
-        <defaultConnectorLabel>Failed</defaultConnectorLabel>
+        <defaultConnectorLabel>Failed / Partial / No-op</defaultConnectorLabel>
         <rules>
             <name>Outcome_Success</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>varIsSuccess</leftValueReference>
+                <leftValueReference>varFinalStatus</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
-                    <booleanValue>true</booleanValue>
+                    <stringValue>Success</stringValue>
                 </rightValue>
             </conditions>
             <connector>
