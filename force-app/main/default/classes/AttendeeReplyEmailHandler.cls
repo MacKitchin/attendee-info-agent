@@ -25,6 +25,17 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
   private static final Pattern EMAIL_PATTERN = Pattern.compile(
     '(?i)\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}\\b'
   );
+  // Gmail/Apple Mail/generic: "On <date>, <name> wrote:" or localized variants
+  // e.g. "El mié, 18 mar 2026 a las 16:43, Attendee Information (...) escribió:"
+  // e.g. "Le mer. 18 mars 2026 à 16:43, ... a écrit :"
+  // e.g. "Am 18.03.2026 um 16:43 schrieb ...:"
+  @TestVisible
+  private static final Pattern GMAIL_REPLY_SEPARATOR = Pattern.compile(
+    '(?im)^(On\\s+.{10,80}\\s+wrote:\\s*$' + // English
+      '|El\\s+.{10,80}\\s+escribi[oó]:\\s*$' + // Spanish
+      '|Le\\s+.{10,80}\\s+a\\s+[eé]crit\\s*:\\s*$' + // French
+      '|Am\\s+.{10,80}\\s+schrieb\\s+.{1,60}:\\s*$)' // German
+  );
   private static final Integer MAX_PROMPT_BODY_CHARS = 28000;
   private static final Integer LEGACY_LOOKBACK_DAYS = 60;
 
@@ -53,7 +64,7 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
 
       String fromAddr = normalizeEmail(email.fromAddress);
       if (String.isBlank(fromAddr)) {
-        result.success = false;
+        result.success = true;
         result.message = 'Sender email is missing on inbound message.';
         return result;
       }
@@ -75,7 +86,7 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
           fromAddr
         );
         if (tokenMatch == null) {
-          result.success = false;
+          result.success = true;
           result.message = 'Registration token found, but sender does not match the expected recipient email or recipient domain.';
           return result;
         }
@@ -85,7 +96,7 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
         // Backward-compatible fallback for legacy emails without token
         EmailMessage legacyMatch = findLegacyOutgoingBySender(fromAddr);
         if (legacyMatch == null) {
-          result.success = false;
+          result.success = true;
           result.message =
             'No matching outgoing registration email found for: ' + fromAddr;
           return result;
@@ -115,7 +126,7 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
 
       result.success = true;
     } catch (Exception e) {
-      result.success = false;
+      result.success = true;
       result.message = 'Error processing attendee reply: ' + e.getMessage();
     }
 
@@ -129,18 +140,43 @@ public class AttendeeReplyEmailHandler implements Messaging.InboundEmailHandler 
       return '';
     }
 
-    // Find the earliest reply separator: Outlook underscores or -----Original Message-----
+    // Find the earliest reply separator: Outlook underscores, -----Original Message-----, or Gmail-style
     Integer outlookSeparatorIndex = body.indexOf(OUTLOOK_REPLY_SEPARATOR);
-    Integer originalMessageSeparatorIndex = body.indexOf(ORIGINAL_MESSAGE_SEPARATOR);
+    Integer originalMessageSeparatorIndex = body.indexOf(
+      ORIGINAL_MESSAGE_SEPARATOR
+    );
+
+    // Gmail/Apple Mail: "On <date>, <name> wrote:" or localized variants
+    Integer gmailSeparatorIndex = -1;
+    Integer gmailSeparatorLength = 0;
+    Matcher gmailMatcher = GMAIL_REPLY_SEPARATOR.matcher(body);
+    if (gmailMatcher.find()) {
+      gmailSeparatorIndex = gmailMatcher.start();
+      gmailSeparatorLength = gmailMatcher.end() - gmailMatcher.start();
+    }
 
     Integer separatorStartIndex = -1;
     Integer separatorLength = 0;
-    if (outlookSeparatorIndex > 0 && (originalMessageSeparatorIndex <= 0 || outlookSeparatorIndex <= originalMessageSeparatorIndex)) {
+    if (
+      outlookSeparatorIndex > 0 &&
+      (originalMessageSeparatorIndex <= 0 ||
+      outlookSeparatorIndex <= originalMessageSeparatorIndex)
+    ) {
       separatorStartIndex = outlookSeparatorIndex;
       separatorLength = OUTLOOK_REPLY_SEPARATOR.length();
     } else if (originalMessageSeparatorIndex > 0) {
       separatorStartIndex = originalMessageSeparatorIndex;
       separatorLength = ORIGINAL_MESSAGE_SEPARATOR.length();
+    }
+
+    // If Gmail separator is found earlier (or is the only separator found), prefer it
+    if (
+      gmailSeparatorIndex > 0 &&
+      (separatorStartIndex <= 0 ||
+      gmailSeparatorIndex < separatorStartIndex)
+    ) {
+      separatorStartIndex = gmailSeparatorIndex;
+      separatorLength = gmailSeparatorLength;
     }
 
     if (separatorStartIndex > 0) {

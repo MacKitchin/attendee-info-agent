@@ -184,10 +184,10 @@ private class AttendeeReplyEmailHandlerTest {
 
   /**
    * @description A reply from an unknown sender (no matching outgoing email)
-   * should fail with a descriptive message.
+   * should silently accept without creating an EmailMessage or bouncing.
    */
   @IsTest
-  static void testNoMatchingOutgoingEmail_failure() {
+  static void testNoMatchingOutgoingEmail_silentlyAccepted() {
     Messaging.InboundEmail email = new Messaging.InboundEmail();
     email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
     email.fromAddress = 'unknown@externaldomain.com';
@@ -207,13 +207,13 @@ private class AttendeeReplyEmailHandlerTest {
     Test.stopTest();
 
     System.assertEquals(
-      false,
+      true,
       result.success,
-      'Should fail when no matching outgoing email exists'
+      'Should silently accept to prevent bounce to customer'
     );
     System.assert(
       result.message.contains('No matching'),
-      'Should include descriptive error message'
+      'Should still include descriptive message for internal logging'
     );
   }
 
@@ -318,8 +318,8 @@ private class AttendeeReplyEmailHandlerTest {
       LIMIT 1
     ];
     System.assert(
-      created.TextBody.contains('Please see below.'),
-      'Full body should be preserved so AI sees both reply intent and registration context'
+      !created.TextBody.contains('Please see below.'),
+      'Top reply with "see below" should be stripped in favor of quoted attendee data'
     );
     System.assert(
       created.TextBody.contains('Attendee Name: Nikki Gustafson'),
@@ -385,6 +385,122 @@ private class AttendeeReplyEmailHandlerTest {
     );
     System.assert(
       created.TextBody.contains('jhenkel@grandrapidsvenues.com'),
+      'Attendee email from top reply should be preserved'
+    );
+  }
+
+  /**
+   * @description When the email body uses a Gmail-style reply separator
+   * (e.g. "El mié, 18 mar 2026 a las 16:43, ... escribió:"), only the top reply
+   * should be stored as TextBody, stripping the quoted original message.
+   */
+  @IsTest
+  static void testGmailSeparator_topReplyKept() {
+    Messaging.InboundEmail email = new Messaging.InboundEmail();
+    email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
+    email.fromAddress = 'signer@example.com';
+    email.fromName = 'Test Signer';
+    email.toAddresses = new List<String>{ 'attendeeinfo@informa.com' };
+    email.plainTextBody =
+      'Hi there\n' +
+      'Xose M Feijoo\n' +
+      'xose@boldest.io\n\n' +
+      'El mié, 18 mar 2026 a las 16:43, Attendee Information escribió:\n\n' +
+      '> Hi Xose Manuel,\n' +
+      '>\n' +
+      '> Thank you for your purchase! Please reply to this email with the attendee\n' +
+      '> name and email address for each registration listed below.\n' +
+      '>\n' +
+      '> 1. Event: Winter Marketplace | Registration Type: Appointment Taker |\n' +
+      '> Type: eTourism Marketplace\n' +
+      '> Attendee Name:\n' +
+      '> Attendee Email:\n';
+
+    Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+    envelope.fromAddress = 'signer@example.com';
+
+    AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
+
+    Test.startTest();
+    Messaging.InboundEmailResult result = handler.handleInboundEmail(
+      email,
+      envelope
+    );
+    Test.stopTest();
+
+    System.assertEquals(true, result.success, 'Handler should succeed');
+
+    EmailMessage created = [
+      SELECT TextBody
+      FROM EmailMessage
+      WHERE Incoming = TRUE
+      LIMIT 1
+    ];
+    System.assert(
+      !created.TextBody.contains('escribió'),
+      'Gmail quoted separator should be stripped'
+    );
+    System.assert(
+      !created.TextBody.contains('Attendee Name:'),
+      'Blank template from quoted section should be stripped'
+    );
+    System.assert(
+      created.TextBody.contains('xose@boldest.io'),
+      'Attendee email from top reply should be preserved'
+    );
+    System.assert(
+      created.TextBody.contains('Xose M Feijoo'),
+      'Attendee name from top reply should be preserved'
+    );
+  }
+
+  /**
+   * @description When the email body uses an English Gmail-style reply separator
+   * (e.g. "On Wed, Mar 18, 2026 at 4:43 PM, ... wrote:"), only the top reply
+   * should be stored as TextBody.
+   */
+  @IsTest
+  static void testGmailSeparatorEnglish_topReplyKept() {
+    Messaging.InboundEmail email = new Messaging.InboundEmail();
+    email.subject = 'Re: ' + AttendeeReplyEmailHandler.SUBJECT_PATTERN;
+    email.fromAddress = 'signer@example.com';
+    email.fromName = 'Test Signer';
+    email.toAddresses = new List<String>{ 'attendeeinfo@informa.com' };
+    email.plainTextBody =
+      'Jane Smith\njane@partner.com\n\n' +
+      'On Wed, Mar 18, 2026 at 4:43 PM, Attendee Information wrote:\n\n' +
+      '> Hi Jane,\n' +
+      '> Please reply with attendee details.\n' +
+      '> 1. Event: MEGA | Registration Type: Appointment Taker | Type: Association\n' +
+      '> Attendee Name:\n' +
+      '> Attendee Email:\n';
+
+    Messaging.InboundEnvelope envelope = new Messaging.InboundEnvelope();
+    envelope.fromAddress = 'signer@example.com';
+
+    AttendeeReplyEmailHandler handler = new AttendeeReplyEmailHandler();
+
+    Test.startTest();
+    Messaging.InboundEmailResult result = handler.handleInboundEmail(
+      email,
+      envelope
+    );
+    Test.stopTest();
+
+    System.assertEquals(true, result.success, 'Handler should succeed');
+
+    EmailMessage created = [
+      SELECT TextBody
+      FROM EmailMessage
+      WHERE Incoming = TRUE
+      LIMIT 1
+    ];
+    System.assert(
+      !created.TextBody.contains('wrote:'),
+      'English Gmail separator should be stripped'
+    );
+    System.assert(
+      created.TextBody.contains('jane@partner.com'),
       'Attendee email from top reply should be preserved'
     );
   }
@@ -613,11 +729,11 @@ private class AttendeeReplyEmailHandlerTest {
 
   /**
    * @description If a token is present but the sender does not match the original
-   * recipient email or domain for that tokenized thread, reject the message
-   * instead of misrouting.
+   * recipient email or domain for that tokenized thread, silently accept without
+   * creating an EmailMessage or bouncing a message to the customer.
    */
   @IsTest
-  static void testTokenRouting_senderMismatch_rejected() {
+  static void testTokenRouting_senderMismatch_silentlyAccepted() {
     Opportunity opp = createOpportunity('Token Sender Mismatch Opp');
     String tokenSubject =
       AttendeeReplyEmailHandler.SUBJECT_PATTERN +
@@ -642,13 +758,13 @@ private class AttendeeReplyEmailHandlerTest {
     Test.stopTest();
 
     System.assertEquals(
-      false,
+      true,
       result.success,
-      'Token + sender mismatch should be rejected'
+      'Should silently accept to prevent bounce to customer'
     );
     System.assert(
       result.message.contains('token') || result.message.contains('Token'),
-      'Error message should indicate token validation failed'
+      'Should still include descriptive message for internal logging'
     );
 
     List<EmailMessage> incoming = [
